@@ -69,7 +69,9 @@ class AppFooter extends StatelessWidget {
             ],
           ),
         ],
+        
       ),
+      
     );
   }
 }

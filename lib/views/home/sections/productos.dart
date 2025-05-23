@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:final_project/views/home/widgets/custom_appBar.dart';
+import 'package:final_project/views/home/widgets/custom_appBar_home.dart';
 
 class Productos extends StatefulWidget {
   const Productos({super.key});

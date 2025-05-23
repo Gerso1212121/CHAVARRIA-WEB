@@ -4,13 +4,33 @@ class CustomFeedbackDialog extends StatelessWidget {
   final String title;
   final String message;
   final bool isSuccess;
+  final List<Widget>? actions;
 
   const CustomFeedbackDialog({
     Key? key,
     required this.title,
     required this.message,
     required this.isSuccess,
+    this.actions,
   }) : super(key: key);
+
+  void showFeedbackDialog({
+    required BuildContext context,
+    required String title,
+    required String message,
+    required bool isSuccess,
+    List<Widget>? actions,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => CustomFeedbackDialog(
+        title: title,
+        message: message,
+        isSuccess: isSuccess,
+        actions: actions,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,12 +57,13 @@ class CustomFeedbackDialog extends StatelessWidget {
         message,
         style: const TextStyle(fontSize: 16),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cerrar'),
-        ),
-      ],
+      actions: actions ??
+          [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cerrar'),
+            ),
+          ],
     );
   }
 }
@@ -52,6 +73,7 @@ void showFeedbackDialog({
   required String title,
   required String message,
   required bool isSuccess,
+  List<Widget>? actions,
 }) {
   showDialog(
     context: context,
@@ -59,6 +81,7 @@ void showFeedbackDialog({
       title: title,
       message: message,
       isSuccess: isSuccess,
+      actions: actions,
     ),
   );
 }

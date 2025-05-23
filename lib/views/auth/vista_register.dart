@@ -1,12 +1,8 @@
-import 'package:final_project/main.dart';
-import 'package:final_project/views/home/widgets/custom_appBarLogin.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:final_project/data/services/supabase_services.dart';
-import 'package:final_project/views/home/home_screen.dart';
 import 'package:final_project/views/auth/vista_login.dart';
-import 'package:final_project/viewmodels/auth/viewmodel_register.dart';
-import 'package:final_project/views/home/widgets/custom_footer.dart'; // ✅ el correcto
+import 'package:final_project/views/home/widgets/custom_appBarLogin.dart';
+import 'package:final_project/views/home/widgets/custom_footer.dart';
 
 class ReguisterPage extends StatefulWidget {
   const ReguisterPage({Key? key}) : super(key: key);
@@ -16,219 +12,197 @@ class ReguisterPage extends StatefulWidget {
 }
 
 class ReguisterPageState extends State<ReguisterPage> {
-  void _homepage() {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const HomePage(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final offsetAnimation = Tween<Offset>(
-            begin: const Offset(0.0, 0.2), // Desliza desde abajo
-            end: Offset.zero,
-          ).animate(CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeInOut,
-          ));
-
-          final fadeAnimation = CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeInOut,
-          );
-
-          return SlideTransition(
-            position: offsetAnimation,
-            child: FadeTransition(
-              opacity: fadeAnimation,
-              child: child,
-            ),
-          );
-        },
-      ),
-    );
-  }
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nombreController = TextEditingController();
+  final TextEditingController _duiController = TextEditingController();
+  final TextEditingController _direccionController = TextEditingController();
+  final TextEditingController _telefonoController = TextEditingController();
+  final TextEditingController _correoController = TextEditingController();
+  final TextEditingController _contrasenaController = TextEditingController();
+  final TextEditingController _confirmarController = TextEditingController();
 
   void _loginPage() {
     Navigator.push(
       context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const LoginPage(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final offsetAnimation = Tween<Offset>(
-            begin: const Offset(0.0, 0.2), // Desde abajo hacia el centro
-            end: Offset.zero,
-          ).animate(CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeInOut,
-          ));
-
-          final fadeAnimation = CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeInOut,
-          );
-
-          return SlideTransition(
-            position: offsetAnimation,
-            child: FadeTransition(
-              opacity: fadeAnimation,
-              child: child,
-            ),
-          );
-        },
-      ),
+      MaterialPageRoute(builder: (context) => const LoginPage()),
     );
   }
 
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  void _submitForm() {
+    if (_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registro exitoso')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4E3D0),
       appBar: const LoginTopBar(),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: Center(
-                          child: FractionallySizedBox(
-                            widthFactor: 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 20),
-                              child: Container(
-                                margin: const EdgeInsets.all(10),
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+              const SizedBox(height: 40),
+
+            Center(
+              child: FractionallySizedBox(
+                widthFactor: 0.85,
+                child: Form(
+                  key: _formKey,
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                            const Expanded(
+                              child: Center(
+                                child: Text(
+                                  "Regístrate",
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Row(children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.arrow_back),
-                                        onPressed: _homepage,
-                                      )
-                                    ]),
-                                    Row(children: const [
-                                      Expanded(
-                                        child: Center(
-                                          child: Text(
-                                            "Regístrate",
-                                            style: TextStyle(
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                      ),
-                                    ]),
-                                    const SizedBox(height: 50),
-                                    TextField(
-                                      controller: _emailController,
-                                      decoration: InputDecoration(
-                                        labelText: 'Correo',
-                                        isDense: true,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                vertical: 10, horizontal: 10),
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10)),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    TextField(
-                                      controller: _passwordController,
-                                      obscureText: true,
-                                      decoration: InputDecoration(
-                                        labelText: 'Contraseña',
-                                        isDense: true,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                vertical: 10, horizontal: 10),
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10)),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    SizedBox(
-                                      width: 250,
-                                      child: ElevatedButton.icon(
-                                        onPressed: () {
-                                          // Lógica de registro
-                                        },
-                                        icon: const Icon(Icons.account_circle),
-                                        label: const Text("Regístrate"),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              const Color(0xFFEC7521),
-                                          foregroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(100),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 14),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const Text("¿Ya tienes cuenta? "),
-                                        TextButton(
-                                          onPressed: _loginPage,
-                                          child: const Text('Inicia aquí',
-                                              style: TextStyle(
-                                                  color: Colors.green)),
-                                        ),
-                                      ],
-                                    ),
-                                    const Divider(height: 30),
-                                    const Text("O inicia con:"),
-                                    const SizedBox(height: 10),
-                                    OutlinedButton.icon(
-                                      onPressed: () {},
-                                      icon: const Icon(FontAwesomeIcons.google,
-                                          size: 18),
-                                      label:
-                                          const Text("Regístrate con Google"),
-                                      style: OutlinedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 24, vertical: 12),
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10)),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        Wrap(
+                          runSpacing: 16,
+                          spacing: 16,
+                          children: [
+                            _buildTextField(
+                              controller: _nombreController,
+                              label: 'Nombre Completo',
+                            ),
+                            _buildTextField(
+                              controller: _duiController,
+                              label: 'DUI',
+                            ),
+                            _buildTextField(
+                              controller: _direccionController,
+                              label: 'Dirección',
+                            ),
+                            _buildTextField(
+                              controller: _telefonoController,
+                              label: 'Teléfono',
+                              keyboardType: TextInputType.phone,
+                            ),
+                            _buildTextField(
+                              controller: _correoController,
+                              label: 'Correo',
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                            _buildTextField(
+                              controller: _contrasenaController,
+                              label: 'Contraseña',
+                              obscureText: true,
+                            ),
+                            _buildTextField(
+                              controller: _confirmarController,
+                              label: 'Confirmar Contraseña',
+                              obscureText: true,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: 250,
+                          child: ElevatedButton.icon(
+                            onPressed: _submitForm,
+                            icon: const Icon(Icons.login),
+                            label: const Text("Regístrate"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFEC7521),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      const AppFooter(), // ✅ Siempre abajo, nunca fuera de vista
-                    ],
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text("¿Ya tienes cuenta? "),
+                            TextButton(
+                              onPressed: _loginPage,
+                              child: const Text(
+                                'Ingresa aquí',
+                                style: TextStyle(color: Colors.green),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Divider(),
+                        const Text("O inicia con:"),
+                        const SizedBox(height: 10),
+                        OutlinedButton.icon(
+                          onPressed: () {},
+                          icon: const Icon(FontAwesomeIcons.google, size: 18),
+                          label: const Text("Regístrate con"),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            );
-          },
+            ),
+            const SizedBox(height: 40),
+            const AppFooter(),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    bool obscureText = false,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return SizedBox(
+      width: 300,
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) {
+            return 'Este campo es obligatorio';
+          }
+          if (label == 'Confirmar Contraseña' &&
+              controller.text != _contrasenaController.text) {
+            return 'Las contraseñas no coinciden';
+          }
+          return null;
+        },
       ),
     );
   }

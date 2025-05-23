@@ -1,61 +1,177 @@
+import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
+import 'package:final_project/views/home/widgets/custom_carrusel.dart';
+import 'package:final_project/views/home/widgets/custom_producto.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class DestacadosYCategorias extends StatelessWidget {
   const DestacadosYCategorias({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Beneficios rápidos
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 32),
-          child: Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 40,
-            runSpacing: 24,
-            children: const [
-              BeneficioItem(icon: Icons.local_shipping, title: 'Envío rápido'),
-              BeneficioItem(icon: Icons.handyman, title: 'Hecho a mano'),
-              BeneficioItem(
-                  icon: Icons.design_services, title: 'Diseños únicos'),
-              BeneficioItem(icon: Icons.verified_user, title: 'Garantía 1 año'),
-            ],
+    return Container(
+      color: Colors.grey.shade50,
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 40,
+              runSpacing: 24,
+              children: const [
+                BeneficioItem(
+                    icon: Icons.local_shipping, title: 'Envío rápido'),
+                BeneficioItem(icon: Icons.handyman, title: 'Hecho a mano'),
+                BeneficioItem(
+                    icon: Icons.design_services, title: 'Diseños únicos'),
+                BeneficioItem(
+                    icon: Icons.verified_user, title: 'Garantía 1 año'),
+              ],
+            ),
           ),
-        ),
 
-        const Divider(thickness: 1.2, height: 50),
+          const SizedBox(height: 32), // 👈 Separación visual
 
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Align(
-            alignment: Alignment.centerLeft,
+          const SlideCarrusell(),
+
+          const SizedBox(height: 32),
+
+          const Divider(thickness: 1.2, height: 50),
+
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               'Explora por categoría',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
           ),
-        ),
 
-        const SizedBox(height: 20),
-        Align(
-          alignment: Alignment.center,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                CategoriaItem(icon: Icons.chair, label: 'Sofás'),
-                CategoriaItem(icon: Icons.bed, label: 'Camas'),
-                CategoriaItem(icon: Icons.table_bar, label: 'Escritorios'),
-                CategoriaItem(icon: Icons.chair_alt, label: 'Sillas'),
-                CategoriaItem(icon: Icons.kitchen, label: 'Cocinas'),
-              ],
+          const SizedBox(height: 20),
+
+          Align(
+            alignment: Alignment.center,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    CategoriaItem(icon: Icons.chair, label: 'Sofás'),
+                    CategoriaItem(icon: Icons.bed, label: 'Camas'),
+                    CategoriaItem(icon: Icons.table_bar, label: 'Escritorios'),
+                    CategoriaItem(icon: Icons.chair_alt, label: 'Sillas'),
+                    CategoriaItem(icon: Icons.kitchen, label: 'Cocinas'),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ],
+
+          const SizedBox(height: 32),
+
+          const Divider(thickness: 1.2, height: 50),
+
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              'Productos destacados',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+          SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Consumer<ProductViewModel>(
+                  builder: (context, viewModel, _) {
+                    if (viewModel.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final offerProducts = viewModel.productos
+                        .where((p) => p.porcentajeDescuento > 0)
+                        .take(30)
+                        .toList();
+
+                    if (offerProducts.isEmpty) {
+                      return const Center(
+                          child: Text('No hay productos en oferta'));
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: offerProducts.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 20,
+                          mainAxisSpacing: 20,
+                          childAspectRatio: 0.75,
+                        ),
+                        itemBuilder: (context, index) {
+                          return ProductCard(producto: offerProducts[index]);
+                        },
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 40),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    'Productos Nuevos',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Consumer<ProductViewModel>(
+                  builder: (context, viewModel, _) {
+                    if (viewModel.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final noOffers = viewModel.productosSinOferta;
+
+                    if (noOffers.isEmpty) {
+                      return const Center(
+                          child: Text('No hay productos sin oferta'));
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: noOffers.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 20,
+                          mainAxisSpacing: 20,
+                          childAspectRatio: 0.75,
+                        ),
+                        itemBuilder: (context, index) {
+                          return ProductCard(producto: noOffers[index]);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 }

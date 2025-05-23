@@ -20,7 +20,7 @@ class LoginViewModel {
           message: "Ingresa un correo electrónico válido.",
           isSuccess: false,
         );
-        return;
+        return; // 👈 Muy importante para detener la ejecución
       }
 
       final response = await iniciarSesionUsuario(usuario);
@@ -29,12 +29,9 @@ class LoginViewModel {
         showFeedbackDialog(
           context: context,
           title: "Bienvenido",
-          message:
-              "Sesión iniciada correctamente con ${usuario.correo}.", // Aquí puedes agregar fecha
+          message: "Sesión iniciada correctamente con ${usuario.correo}.",
           isSuccess: true,
         );
-
-        // TODO: aquí puedes llamar tu función para enviar email de notificación
 
         Future.delayed(const Duration(seconds: 1), onSuccess);
       } else {

@@ -1,4 +1,4 @@
-import 'package:final_project/data/services/supabase_services.dart';
+import 'package:final_project/data/services/auth_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:final_project/data/models/users.dart';
 
