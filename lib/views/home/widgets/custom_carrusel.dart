@@ -74,3 +74,72 @@ class _SlideCarrusellState extends State<SlideCarrusell> {
     );
   }
 }
+
+//carusel de imagenes principal
+
+class FadingImageCarousel extends StatefulWidget {
+  final List<String> imagePaths; // rutas locales o URLs
+
+  const FadingImageCarousel({Key? key, required this.imagePaths})
+      : super(key: key);
+
+  @override
+  State<FadingImageCarousel> createState() => _FadingImageCarouselState();
+}
+
+class _FadingImageCarouselState extends State<FadingImageCarousel>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fadeAnimation;
+
+  int _currentImageIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller);
+
+    _controller.forward();
+
+    _startImageLoop();
+  }
+
+  void _startImageLoop() async {
+    while (mounted) {
+      await Future.delayed(const Duration(seconds: 4));
+      if (!mounted) break;
+
+      await _controller.reverse(); // fade out
+      setState(() {
+        _currentImageIndex =
+            (_currentImageIndex + 1) % widget.imagePaths.length;
+      });
+      await _controller.forward(); // fade in
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Image.asset(
+        widget.imagePaths[_currentImageIndex],
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+      ),
+    );
+  }
+}

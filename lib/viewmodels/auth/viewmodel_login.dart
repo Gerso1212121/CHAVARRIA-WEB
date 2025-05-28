@@ -20,12 +20,40 @@ class LoginViewModel {
           message: "Ingresa un correo electrónico válido.",
           isSuccess: false,
         );
-        return; // 👈 Muy importante para detener la ejecución
+        return;
       }
 
       final response = await iniciarSesionUsuario(usuario);
+      print('🔐 Login response: ${response?.user?.id}');
 
       if (response != null && response.user != null) {
+        final userId = response.user!.id;
+
+        // Verificar si el usuario es administrador
+        final adminCheck = await Supabase.instance.client
+            .from('administrador')
+            .select('rol')
+            .eq('id', userId)
+            .maybeSingle();
+
+        print('🛡️ adminCheck: $adminCheck');
+
+        if (adminCheck != null &&
+            (adminCheck['rol'] == 'administrador' ||
+                adminCheck['rol'] == 'empleado')) {
+          print('⛔ Usuario bloqueado por ser $adminCheck');
+          await cerrarSesionUsuario();
+          showFeedbackDialog(
+            context: context,
+            title: "Acceso restringido",
+            message: "Este usuario es inválido.",
+            isSuccess: false,
+          );
+          return;
+        }
+
+        // Usuario válido como cliente
+        print('✅ Usuario cliente: sesión iniciada');
         showFeedbackDialog(
           context: context,
           title: "Bienvenido",
@@ -46,49 +74,6 @@ class LoginViewModel {
       showFeedbackDialog(
         context: context,
         title: "Error De Datos",
-        message: e.toString(),
-        isSuccess: false,
-      );
-    }
-  }
-
-  Future<void> registrarNuevoUsuario({
-    required BuildContext context,
-    required Usuario usuario,
-  }) async {
-    if (!emailRegExp.hasMatch(usuario.correo)) {
-      showFeedbackDialog(
-        context: context,
-        title: "Correo inválido",
-        message: "Por favor, ingresa un correo electrónico válido.",
-        isSuccess: false,
-      );
-      return;
-    }
-
-    try {
-      final response = await registrarUsuario(usuario);
-
-      if (response != null && response.user != null) {
-        showFeedbackDialog(
-          context: context,
-          title: "Registro exitoso",
-          message:
-              "Tu cuenta ha sido registrada. Inicia sesión para continuar.",
-          isSuccess: true,
-        );
-      } else {
-        showFeedbackDialog(
-          context: context,
-          title: "Error en el registro",
-          message: "No se pudo completar el registro.",
-          isSuccess: false,
-        );
-      }
-    } catch (e) {
-      showFeedbackDialog(
-        context: context,
-        title: "Error",
         message: e.toString(),
         isSuccess: false,
       );

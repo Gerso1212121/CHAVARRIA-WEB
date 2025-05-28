@@ -59,38 +59,16 @@ class SupabaseService {
     final session = supabase.auth.currentSession;
     return session != null;
   }
-}
 
-//////  funciones de productService      /////////
-
-class ProductService {
-  final supabase = Supabase.instance.client;
-
-  /// Obtener todos los productos
-  Future<List<Map<String, dynamic>>> getProducts() async {
+  Future<void> changePassword(String nuevaContrasena) async {
     try {
-      final response = await supabase.from('products').select();
-      return List<Map<String, dynamic>>.from(response);
+      await supabase.auth.updateUser(
+        UserAttributes(password: nuevaContrasena),
+      );
+    } on AuthException catch (e) {
+      throw Exception('Error al actualizar contraseña: ${e.message}');
     } catch (e) {
-      throw Exception('Error inesperado al obtener productos: $e');
-    }
-  }
-
-  /// Agregar un nuevo producto
-  Future<void> addProduct(Map<String, dynamic> productData) async {
-    try {
-      await supabase.from('products').insert(productData);
-    } catch (e) {
-      throw Exception('Error inesperado al agregar producto: $e');
-    }
-  }
-
-  /// Eliminar producto por id
-  Future<void> deleteProduct(int productId) async {
-    try {
-      await supabase.from('products').delete().eq('id', productId);
-    } catch (e) {
-      throw Exception('Error inesperado al eliminar producto: $e');
+      throw Exception('Error inesperado: $e');
     }
   }
 }

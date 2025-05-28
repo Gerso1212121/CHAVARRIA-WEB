@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:final_project/data/services/auth_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:final_project/data/models/users.dart';
+import 'package:http/http.dart' as http;
 
 final SupabaseService _supabaseService = SupabaseService();
 
@@ -29,7 +31,3 @@ Future<bool> verificarSesionActiva() {
 User? obtenerUsuarioActual() {
   return _supabaseService.getCurrentUser();
 }
-
-
-
-

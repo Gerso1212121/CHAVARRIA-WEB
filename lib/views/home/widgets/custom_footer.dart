@@ -1,77 +1,192 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AppFooter extends StatelessWidget {
   const AppFooter({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 700;
+
     return Container(
       color: Colors.black87,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Lema y redes sociales
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Expanded(
-                child: Text(
-                  "DISFRUTA AL MÁXIMO",
-                  style: TextStyle(
-                    color: Colors.orangeAccent,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return Flex(
+                direction: isMobile ? Axis.vertical : Axis.horizontal,
+                mainAxisSize: MainAxisSize.min, // <--- para evitar altura infinita
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(
+                    width: isMobile ? double.infinity : 280,
+                    child: _buildLogoAndSocial(),
                   ),
-                ),
-              ),
-              Row(
-                children: const [
-                  Icon(FontAwesomeIcons.facebook, color: Colors.orange, size: 18),
-                  SizedBox(width: 12),
-                  Icon(FontAwesomeIcons.instagram, color: Colors.orange, size: 18),
+                  const SizedBox(width: 40),
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: Wrap(
+                      spacing: 48,
+                      runSpacing: 24,
+                      alignment: WrapAlignment.end,
+                      children: [
+                        _buildColumn("Información para clientes", [
+                          "Términos y condiciones",
+                          "Política de privacidad",
+                          "Soporte al cliente",
+                          "Guía de compra"
+                        ]),
+                        _buildColumn("Gestión de la cuenta", [
+                          "Mi perfil",
+                          "Historial de pedidos",
+                          "Cambiar contraseña",
+                          "Cerrar sesión"
+                        ]),
+                        _buildColumn("Sitios de interés", [
+                          "Blog",
+                          "Proyectos destacados",
+                          "Testimonios",
+                          "Galería de trabajos"
+                        ]),
+                      ],
+                    ),
+                  ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
-          const SizedBox(height: 20),
-
+          const SizedBox(height: 32),
           const Divider(color: Colors.white24),
-
-          const SizedBox(height: 10),
-
-          // Información de contacto
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 20,
-            runSpacing: 10,
-            children: const [
-              Icon(Icons.copyright, size: 14, color: Colors.white70),
-              Text(
-                "2008 - 2025 Carpintería Chavarría S.A. de C.V.",
-                style: TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-              Icon(Icons.location_on_outlined, size: 14, color: Colors.white70),
-              Text(
-                "Ruta Militar, Col. San Francisco, San Miguel",
-                style: TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-              Icon(Icons.mail_outline, size: 14, color: Colors.white70),
-              Text(
-                "carpinteriachavarria@gmail.com",
-                style: TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-              Icon(Icons.phone_outlined, size: 14, color: Colors.white70),
-              Text(
-                "503 2230-4976",
-                style: TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-            ],
+          const SizedBox(height: 20),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 700;
+              return Center(
+                child: Wrap(
+                  spacing: 24,
+                  runSpacing: 16,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    _footerItem(
+                      "2008 - 2025 ©. Todos los derechos reservados\nCarpintería Chavarría\nConfort y Personalidad",
+                      isMobile,
+                    ),
+                    _dividerOrSpacer(isMobile),
+                    _footerItem(
+                      "Ruta Militar. Colonia San Francisco, San Miguel.\ncarpinteriachavarria@gmail.com | 503 2230-4976",
+                      isMobile,
+                    ),
+                    _dividerOrSpacer(isMobile),
+                    _footerItem("Carpintería Chavarría S.A. De C.V", isMobile),
+                  ],
+                ),
+              );
+            },
           ),
         ],
-        
       ),
-      
     );
+  }
+
+  Widget _buildLogoAndSocial() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: const [
+            Icon(Icons.play_arrow, color: Colors.orange, size: 28),
+            SizedBox(width: 8),
+            Text(
+              "CHAVARRIA",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          "DISFRUTA AL MÁXIMO",
+          style: TextStyle(
+            color: Colors.orangeAccent,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Text("Síguenos", style: TextStyle(color: Colors.white)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(FontAwesomeIcons.facebook, color: Colors.orange, size: 18),
+              onPressed: () => _launchURL('https://facebook.com'),
+            ),
+            IconButton(
+              icon: const Icon(FontAwesomeIcons.instagram, color: Colors.orange, size: 18),
+              onPressed: () => _launchURL('https://instagram.com'),
+            ),
+            IconButton(
+              icon: const Icon(FontAwesomeIcons.whatsapp, color: Colors.orange, size: 18),
+              onPressed: () => _launchURL('https://wa.me/50322304976'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildColumn(String title, List<String> items) {
+    return SizedBox(
+      width: 180,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          ...items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(item, style: const TextStyle(color: Colors.white70)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _footerItem(String text, bool isMobile) {
+    return SizedBox(
+      width: isMobile ? double.infinity : 300,
+      child: Text(
+        text,
+        style: const TextStyle(color: Colors.white70, fontSize: 12),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _dividerOrSpacer(bool isMobile) {
+    return isMobile
+        ? const SizedBox(height: 12)
+        : const SizedBox(
+            height: 40,
+            child: VerticalDivider(color: Color.fromARGB(155, 255, 255, 255), thickness: 1),
+          );
+  }
+
+  static Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw 'Could not launch $url';
+    }
   }
 }
