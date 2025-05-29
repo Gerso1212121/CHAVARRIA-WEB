@@ -1,3 +1,4 @@
+import 'package:final_project/viewmodels/servicios/redireccionWoompi.dart';
 import 'package:flutter/material.dart';
 
 class MetodoPagoPage extends StatelessWidget {
@@ -31,11 +32,8 @@ class MetodoPagoPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const WompiPage()),
-                );
+              onPressed: () async {
+                await lanzarCheckoutWompiDesdeUsuario(total);
               },
               icon: const Icon(Icons.account_balance_wallet_outlined),
               label: const Text('Pagar con Wompi'),
