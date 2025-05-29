@@ -131,7 +131,8 @@ class UniversalTopBar extends StatefulWidget {
             cartViewModel.loadItemsFromSupabase();
           }
 
-          final cartItems = cartViewModel.items;
+          final cartItems =
+              cartViewModel.items.where((item) => item.stock > 0).toList();
 
           return Column(
             children: [

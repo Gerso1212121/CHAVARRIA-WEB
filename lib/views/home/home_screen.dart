@@ -10,8 +10,6 @@ import 'package:final_project/views/home/widgets/custom_datos.dart';
 import 'package:final_project/views/home/widgets/popup.dart';
 import 'package:final_project/views/home/widgets/custom_APPBARUNIVERSAL.dart';
 
-
-
 /// Example HomePage using the UniversalTopBarWrapper:
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -40,7 +38,7 @@ class HomePage extends StatelessWidget {
             ),
             Positioned.fill(
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(color: Colors.black.withOpacity(0.3)),
               ),
             ),
@@ -61,23 +59,15 @@ class HomePage extends StatelessWidget {
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    textAlign:
-                        isSmall ? TextAlign.center : TextAlign.left,
+                    textAlign: isSmall ? TextAlign.center : TextAlign.left,
                   ),
                   const SizedBox(height: 16),
                   Align(
-                    alignment: isSmall
-                        ? Alignment.center
-                        : Alignment.centerLeft,
+                    alignment:
+                        isSmall ? Alignment.center : Alignment.centerLeft,
                     child: ElevatedButton(
-                      onPressed: () => Navigator.pushNamed(context, '/productos'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/productos'),
                       child: const Text('Ver Productos'),
                     ),
                   ),
@@ -88,8 +78,7 @@ class HomePage extends StatelessWidget {
                       color: Colors.white,
                       fontSize: isSmall ? 13 : 14,
                     ),
-                    textAlign:
-                        isSmall ? TextAlign.center : TextAlign.left,
+                    textAlign: isSmall ? TextAlign.center : TextAlign.left,
                   ),
                 ],
               ),

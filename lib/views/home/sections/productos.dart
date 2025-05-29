@@ -95,7 +95,8 @@ class _ProductosState extends State<Productos> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Filtrado por:", style: TextStyle(fontWeight: FontWeight.bold)),
+          const Text("Filtrado por:",
+              style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             value: categoriaSeleccionada,
@@ -165,7 +166,8 @@ class _ProductosState extends State<Productos> {
       itemBuilder: (context, index) {
         final producto = productos[index];
         return GestureDetector(
-          onTap: () => Navigator.pushNamed(context, '/detalleProducto', arguments: producto),
+          onTap: () => Navigator.pushNamed(context, '/detalleProducto',
+              arguments: producto),
           child: Stack(
             children: [
               Container(
@@ -211,7 +213,8 @@ class _ProductosState extends State<Productos> {
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 4),
-                          Text('\$${(producto.precio ?? 0.0).toStringAsFixed(2)}'),
+                          Text(
+                              '\$${(producto.precio ?? 0.0).toStringAsFixed(2)}'),
                         ],
                       ),
                     ),
@@ -223,7 +226,8 @@ class _ProductosState extends State<Productos> {
                   top: 0,
                   right: 0,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: const BoxDecoration(
                       color: Colors.red,
                       borderRadius: BorderRadius.only(

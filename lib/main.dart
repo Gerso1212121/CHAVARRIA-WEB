@@ -1,5 +1,6 @@
-import 'package:final_project/spash.dart';
 import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
+import 'package:final_project/views/home/sections/pagocompleto.dart';
+import 'package:final_project/views/home/sections/productos.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -15,7 +16,8 @@ void main() async {
 
   await Supabase.initialize(
     url: 'https://xuzvixzgudjycuywwppu.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1enZpeHpndWRqeWN1eXd3cHB1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NjQ5NzYxMCwiZXhwIjoyMDYyMDczNjEwfQ.vfsDcpR9KvFaZhA1zdUnXCS-8ozc_YHJcNIaT_FI9V4',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1enZpeHpndWRqeWN1eXd3cHB1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NjQ5NzYxMCwiZXhwIjoyMDYyMDczNjEwfQ.vfsDcpR9KvFaZhA1zdUnXCS-8ozc_YHJcNIaT_FI9V4',
   );
 
   final productService = ProductService();
@@ -45,11 +47,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      title: 'Mi App',
       initialRoute: '/',
       routes: {
-        '/': (context) => const SplashScreen(),
+        '/': (context) => const HomePage(),
         '/home': (context) => const HomePage(),
+        '/productos': (context) => const Productos(),
         '/terminos': (context) => const TermsAndConditionsPage(),
+        '/pago-completo': (context) =>
+            const PagoCompletoPage(), // <-- ✅ NUEVA RUTA
       },
     );
   }
