@@ -33,7 +33,7 @@ class MetodoPagoPage extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: () async {
-                await lanzarCheckoutWompiDesdeUsuario(total);
+                await lanzarPagoDesdeFlutter(total);
               },
               icon: const Icon(Icons.account_balance_wallet_outlined),
               label: const Text('Pagar con Wompi'),
