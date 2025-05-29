@@ -213,12 +213,7 @@ class _ProductCardState extends State<ProductCard> {
                     backgroundColor: const Color(0xFFEC7521),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(6),
-                        bottomRight: Radius.circular(6),
-                      ),
-                    ),
+                    shape: const RoundedRectangleBorder(), // Sin border radius
                   ),
                   onPressed: () async {
                     showDialog(
@@ -260,64 +255,47 @@ class _ProductCardState extends State<ProductCard> {
                     final cartVM =
                         Provider.of<CartViewModel>(context, listen: false);
                     final result = await cartVM.agregarProductoDirecto(
-                      productoId: p.idProducto,
-                    );
+                        productoId: p.idProducto);
 
-                    Navigator.of(context).pop(); // Cerrar loader
+                    Navigator.of(context).pop();
 
-                    if (result == AgregadoResultado.yaExiste) {
-                      showFeedbackDialog(
-                        context: context,
-                        title: 'Producto ya en carrito',
-                        message: 'Este producto ya fue agregado previamente.',
-                        isSuccess: false,
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('OK'),
-                          ),
-                        ],
-                      );
-                    } else if (result == AgregadoResultado.sinStock) {
-                      showFeedbackDialog(
-                        context: context,
-                        title: 'Sin stock',
-                        message: 'Este producto no tiene stock disponible.',
-                        isSuccess: false,
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('OK'),
-                          ),
-                        ],
-                      );
-                    } else if (result == AgregadoResultado.error) {
-                      showFeedbackDialog(
-                        context: context,
-                        title: 'Error',
-                        message: 'Ocurrió un error al agregar el producto.',
-                        isSuccess: false,
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('OK'),
-                          ),
-                        ],
-                      );
-                    } else {
-                      showFeedbackDialog(
-                        context: context,
-                        title: '¡Agregado!',
-                        message: 'El producto fue agregado a tu carrito.',
-                        isSuccess: true,
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('OK'),
-                          ),
-                        ],
-                      );
+                    String title, message;
+                    bool isSuccess;
+
+                    switch (result) {
+                      case AgregadoResultado.yaExiste:
+                        title = 'Producto ya en carrito';
+                        message = 'Este producto ya fue agregado previamente.';
+                        isSuccess = false;
+                        break;
+                      case AgregadoResultado.sinStock:
+                        title = 'Sin stock';
+                        message = 'Este producto no tiene stock disponible.';
+                        isSuccess = false;
+                        break;
+                      case AgregadoResultado.error:
+                        title = 'Error';
+                        message = 'Ocurrió un error al agregar el producto.';
+                        isSuccess = false;
+                        break;
+                      default:
+                        title = '¡Agregado!';
+                        message = 'El producto fue agregado a tu carrito.';
+                        isSuccess = true;
                     }
+
+                    showFeedbackDialog(
+                      context: context,
+                      title: title,
+                      message: message,
+                      isSuccess: isSuccess,
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    );
                   },
                   child: const Text(
                     'Agregar al carrito',
