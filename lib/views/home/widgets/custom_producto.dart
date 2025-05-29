@@ -209,6 +209,17 @@ class _ProductCardState extends State<ProductCard> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFEC7521),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(6),
+                        bottomRight: Radius.circular(6),
+                      ),
+                    ),
+                  ),
                   onPressed: () async {
                     showDialog(
                       context: context,
@@ -249,7 +260,8 @@ class _ProductCardState extends State<ProductCard> {
                     final cartVM =
                         Provider.of<CartViewModel>(context, listen: false);
                     final result = await cartVM.agregarProductoDirecto(
-                        productoId: p.idProducto);
+                      productoId: p.idProducto,
+                    );
 
                     Navigator.of(context).pop(); // Cerrar loader
 
@@ -310,14 +322,13 @@ class _ProductCardState extends State<ProductCard> {
                   child: const Text(
                     'Agregar al carrito',
                     style: TextStyle(
-                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
             ],
-          ),
+          )
         ],
       ),
     );
