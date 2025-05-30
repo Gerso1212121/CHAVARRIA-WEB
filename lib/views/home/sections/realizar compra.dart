@@ -24,7 +24,7 @@ class MetodoPagoPage extends StatelessWidget {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            Text('Cantidad \$${cantidad.toStringAsFixed(2)}',
+            Text('Cantidad ${cantidad.toStringAsFixed(2)}',
                 style: const TextStyle(fontSize: 18)),
             const SizedBox(height: 10),
             Text('Total a pagar: \$${total.toStringAsFixed(2)}',
@@ -60,7 +60,7 @@ class MetodoPagoPage extends StatelessWidget {
                 );
 
                 if (continuar == true) {
-                  await lanzarPagoDesdeFlutter(context, total, cantidad);
+                  await lanzarPagoDesdeFlutter(context, total);
                 }
               },
               icon: const Icon(Icons.account_balance_wallet_outlined),

@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 // Función principal para lanzar el pago, ahora requiere el BuildContext
 Future<void> lanzarPagoDesdeFlutter(
-    BuildContext context, double total, int cantidad) async {
+    BuildContext context, double total) async {
   // Validar monto máximo permitido ($1000)
   if (total > 1000.0) {
     showDialog(
@@ -55,7 +55,6 @@ Future<void> lanzarPagoDesdeFlutter(
 
     // Conversión a centavos (IMPORTANTE: debes multiplicar por 100)
     final montoCents = (total).toDouble();
-    final cantidadP = cantidad;
 
     final referencia = "orden_${DateTime.now().millisecondsSinceEpoch}";
 
@@ -66,7 +65,6 @@ Future<void> lanzarPagoDesdeFlutter(
         'referencia': referencia,
         'montoCents': montoCents,
         'nombreProducto': "Compra desde Flutter",
-        'cantidad': cantidad, // 👈 Aquí lo agregas
       }),
     );
 
