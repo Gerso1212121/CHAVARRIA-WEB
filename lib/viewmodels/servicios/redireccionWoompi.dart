@@ -14,7 +14,7 @@ Future<void> lanzarPagoDesdeFlutter(double total) async {
   final responseCliente = await supabase
       .from('cliente')
       .select('correo')
-      .eq('id', user.id)
+      .eq('id_cliente', user.id)
       .single();
 
   final correo = responseCliente['correo'];
