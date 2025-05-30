@@ -5,7 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Función principal para lanzar el pago, ahora requiere el BuildContext
-Future<void> lanzarPagoDesdeFlutter(BuildContext context, double total) async {
+Future<void> lanzarPagoDesdeFlutter(
+    BuildContext context, double total, int cantidad) async {
   // Validar monto máximo permitido ($1000)
   if (total > 1000.0) {
     showDialog(
@@ -54,6 +55,7 @@ Future<void> lanzarPagoDesdeFlutter(BuildContext context, double total) async {
 
     // Conversión a centavos (IMPORTANTE: debes multiplicar por 100)
     final montoCents = (total).toDouble();
+    final cantidadP = cantidad;
 
     final referencia = "orden_${DateTime.now().millisecondsSinceEpoch}";
 
@@ -63,7 +65,8 @@ Future<void> lanzarPagoDesdeFlutter(BuildContext context, double total) async {
       body: jsonEncode({
         'referencia': referencia,
         'montoCents': montoCents,
-        'nombreProducto': "Compra desde Flutter"
+        'nombreProducto': "Compra desde Flutter",
+        'cantidad': cantidad, // 👈 Aquí lo agregas
       }),
     );
 
@@ -82,7 +85,8 @@ Future<void> lanzarPagoDesdeFlutter(BuildContext context, double total) async {
         context: context,
         builder: (context) => AlertDialog(
           title: Text("Error al generar el enlace"),
-          content: Text("No se pudo generar el link de pago.\n${response.body}"),
+          content:
+              Text("No se pudo generar el link de pago.\n${response.body}"),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),

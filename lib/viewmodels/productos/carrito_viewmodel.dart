@@ -16,6 +16,7 @@ class CartViewModel extends ChangeNotifier {
   bool cargadoInicial = false;
 
   double get total => _items.fold(0, (sum, item) => sum + item.total);
+  int get cantidad => _items.fold(0, (acc, item) => acc + item.cantidad);
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;

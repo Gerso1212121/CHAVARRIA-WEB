@@ -56,7 +56,8 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  Widget _buildWideLayout(BuildContext context, List cartItems, CartViewModel cartViewModel) {
+  Widget _buildWideLayout(
+      BuildContext context, List cartItems, CartViewModel cartViewModel) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -83,7 +84,8 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMobileLayout(BuildContext context, List cartItems, CartViewModel cartViewModel) {
+  Widget _buildMobileLayout(
+      BuildContext context, List cartItems, CartViewModel cartViewModel) {
     return Column(
       children: [
         ...cartItems.map<Widget>((item) => _buildCartItem(item, cartViewModel)),
@@ -127,12 +129,15 @@ class CartPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(item.nombre,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
                     Text('Precio: \$${item.precio.toStringAsFixed(2)}'),
-                    Text('Subtotal: \$${(item.precio * item.cantidad).toStringAsFixed(2)}'),
+                    Text(
+                        'Subtotal: \$${(item.precio * item.cantidad).toStringAsFixed(2)}'),
                     const SizedBox(height: 4),
-                    Text('Stock disponible: ${item.stock}', style: const TextStyle(fontSize: 11)),
+                    Text('Stock disponible: ${item.stock}',
+                        style: const TextStyle(fontSize: 11)),
                     const SizedBox(height: 6),
                     Row(
                       children: [
@@ -140,17 +145,20 @@ class CartPage extends StatelessWidget {
                           icon: const Icon(Icons.remove),
                           onPressed: item.cantidad > 1
                               ? () async {
-                                  await cartViewModel.decrementarCantidadItem(item.productoId);
+                                  await cartViewModel
+                                      .decrementarCantidadItem(item.productoId);
                                   setState(() {});
                                 }
                               : null,
                         ),
-                        Text('${item.cantidad}', style: const TextStyle(fontSize: 16)),
+                        Text('${item.cantidad}',
+                            style: const TextStyle(fontSize: 16)),
                         IconButton(
                           icon: const Icon(Icons.add),
                           onPressed: item.cantidad < item.stock
                               ? () async {
-                                  await cartViewModel.incrementarCantidadItem(item.productoId);
+                                  await cartViewModel
+                                      .incrementarCantidadItem(item.productoId);
                                   setState(() {});
                                 }
                               : null,
@@ -176,6 +184,7 @@ class CartPage extends StatelessWidget {
 
   Widget _buildResumen(BuildContext context, CartViewModel cartViewModel) {
     final subtotal = cartViewModel.total;
+    final cantidad = cartViewModel.cantidad;
     const armado = 25.0;
     const envio = 20.0;
     final total = subtotal + armado + envio;
@@ -212,7 +221,8 @@ class CartPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => MetodoPagoPage(total: total),
+                    builder: (_) =>
+                        MetodoPagoPage(total: total, cantidad: cantidad),
                   ),
                 );
               },

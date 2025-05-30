@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 
 class MetodoPagoPage extends StatelessWidget {
   final double total;
+  final int cantidad;
 
-  const MetodoPagoPage({super.key, required this.total});
+  const MetodoPagoPage({super.key, required this.total, required this.cantidad});
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +23,9 @@ class MetodoPagoPage extends StatelessWidget {
               'Resumen del pago',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 10),
+            Text('Cantidad \$${cantidad.toStringAsFixed(2)}',
+                style: const TextStyle(fontSize: 18)),
             const SizedBox(height: 10),
             Text('Total a pagar: \$${total.toStringAsFixed(2)}',
                 style: const TextStyle(fontSize: 18)),
@@ -56,7 +60,7 @@ class MetodoPagoPage extends StatelessWidget {
                 );
 
                 if (continuar == true) {
-                  await lanzarPagoDesdeFlutter(context, total);
+                  await lanzarPagoDesdeFlutter(context, total, cantidad);
                 }
               },
               icon: const Icon(Icons.account_balance_wallet_outlined),
@@ -69,10 +73,7 @@ class MetodoPagoPage extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const PayPalPage()),
-                );
+              
               },
               icon: const Icon(Icons.paypal),
               label: const Text('Pagar con PayPal'),
@@ -89,32 +90,3 @@ class MetodoPagoPage extends StatelessWidget {
   }
 }
 
-// Página de simulación de Wompi
-class WompiPage extends StatelessWidget {
-  const WompiPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Pago con Wompi')),
-      body: const Center(
-        child: Text('Aquí se integraría el formulario embebido de Wompi'),
-      ),
-    );
-  }
-}
-
-// Página de simulación de PayPal
-class PayPalPage extends StatelessWidget {
-  const PayPalPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Pago con PayPal')),
-      body: const Center(
-        child: Text('Aquí se integraría el WebView o SDK de PayPal'),
-      ),
-    );
-  }
-}

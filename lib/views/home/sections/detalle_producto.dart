@@ -223,7 +223,7 @@ class ProductDetailPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => MetodoPagoPage(total: cartVM.total),
+                          builder: (_) => MetodoPagoPage(total: cartVM.total, cantidad: cartVM.cantidad),
                         ),
                       );
                     }
