@@ -1,0 +1,27 @@
+name: Build and Deploy Flutter Web
+
+on:
+  push:
+    branches:
+      - main  # O el branch que uses
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.3'   # <-- ¡Aquí tu versión!
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web
+        run: flutter build web
+
+      # Puedes agregar otros pasos aquí, como deploy a Netlify o subir a GH Pages.
