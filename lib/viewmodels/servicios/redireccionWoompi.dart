@@ -24,6 +24,8 @@ Future<void> lanzarPagoDesdeFlutter(double total) async {
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({'total': total, 'correo': correo}),
   );
+  print('📧 Correo obtenido de Supabase: $correo');
+  print('💵 Total enviado: $total');
 
   if (response.statusCode == 200) {
     final url = jsonDecode(response.body)['url'];
