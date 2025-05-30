@@ -183,11 +183,8 @@ class CartPage extends StatelessWidget {
   }
 
   Widget _buildResumen(BuildContext context, CartViewModel cartViewModel) {
-    final subtotal = cartViewModel.total;
+    final total = cartViewModel.total;
     final cantidad = cartViewModel.cantidad;
-    const armado = 25.0;
-    const envio = 20.0;
-    final total = subtotal + armado + envio;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -204,7 +201,7 @@ class CartPage extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 12),
-          Text('Subtotal: \$${subtotal.toStringAsFixed(2)}'),
+          Text('Subtotal: \$${total.toStringAsFixed(2)}'),
           const Text('Armado: \$25'),
           const Text('Envío: \$20'),
           const SizedBox(height: 8),
