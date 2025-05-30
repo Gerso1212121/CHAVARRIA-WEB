@@ -33,7 +33,31 @@ class MetodoPagoPage extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: () async {
-                await lanzarPagoDesdeFlutter(total);
+                final continuar = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text("¿Deseas continuar?"),
+                    content: Text(
+                      "Serás redirigido a otra página para completar tu pago con Wompi.\n\n"
+                      "El enlace y tu sesión de pago serán válidos durante los próximos 15 minutos. "
+                      "Asegúrate de completar el pago en ese tiempo para evitar inconvenientes.",
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text("Cancelar"),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: Text("Continuar"),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (continuar == true) {
+                  await lanzarPagoDesdeFlutter(context, total);
+                }
               },
               icon: const Icon(Icons.account_balance_wallet_outlined),
               label: const Text('Pagar con Wompi'),
