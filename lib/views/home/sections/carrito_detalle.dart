@@ -202,8 +202,6 @@ class CartPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text('Subtotal: \$${total.toStringAsFixed(2)}'),
-          const Text('Armado: \$25'),
-          const Text('Envío: \$20'),
           const SizedBox(height: 8),
           Text(
             'Total: \$${total.toStringAsFixed(2)}',
