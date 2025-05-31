@@ -149,13 +149,44 @@ class CartPage extends StatelessWidget {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.remove),
-                          onPressed: item.cantidad > 1
-                              ? () async {
-                                  await cartViewModel
-                                      .decrementarCantidadItem(item.productoId);
-                                  setState(() {});
-                                }
-                              : null,
+                          onPressed: () async {
+                            if (item.cantidad == 1) {
+                              final confirmar = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12)),
+                                  title: const Text('¿Eliminar producto?'),
+                                  content: const Text(
+                                      '¿Deseas eliminar este producto del carrito?'),
+                                  actions: [
+                                    TextButton(
+                                      child: const Text('Cancelar'),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.red),
+                                      child: const Text('Eliminar'),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirmar == true) {
+                                await cartViewModel
+                                    .eliminarItemDeCarrito(item.id);
+                              }
+                            } else {
+                              await cartViewModel
+                                  .decrementarCantidadItem(item.productoId);
+                            }
+
+                            setState(() {});
+                          },
                         ),
                         Text('${item.cantidad}',
                             style: const TextStyle(fontSize: 16)),
@@ -241,6 +272,28 @@ class CartPage extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
+                const montoMinimo = 50.0;
+
+                if (total < montoMinimo) {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      title: const Text('Monto insuficiente'),
+                      content: Text(
+                          'El total del carrito debe ser mayor a \$${montoMinimo.toStringAsFixed(2)} para continuar con la compra.'),
+                      actions: [
+                        TextButton(
+                          child: const Text('Aceptar'),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+                  );
+                  return;
+                }
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(

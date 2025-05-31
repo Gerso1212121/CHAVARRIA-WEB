@@ -122,119 +122,270 @@ class ProductDetailPage extends StatelessWidget {
 
         int cantidadActual = itemEnCarrito.cantidad;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              producto.nombre,
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Text(
-                  '\$${producto.precio?.toStringAsFixed(2) ?? '0.00'}',
-                  style: const TextStyle(fontSize: 22, color: Colors.green),
-                ),
-                const SizedBox(width: 10),
-                if (precioAnterior != null)
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                producto.nombre,
+                style:
+                    const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
                   Text(
-                    '\$${precioAnterior!.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey,
-                      decoration: TextDecoration.lineThrough,
+                    '\$${producto.precio?.toStringAsFixed(2)}',
+                    style: const TextStyle(fontSize: 24, color: Colors.green),
+                  ),
+                  if (precioAnterior != null) ...[
+                    const SizedBox(width: 12),
+                    Text(
+                      '\$${precioAnterior!.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.inventory_2, size: 18, color: Colors.grey[700]),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Stock: ${producto.stock}',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ],
+              ),
+              if (producto.porcentajeDescuento > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Chip(
+                    label: Text(
+                      'Descuento: ${producto.porcentajeDescuento}%',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                ),
+              const Divider(height: 32),
+
+              /// Cantidad
+              const Text('Cantidad',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: cantidadActual > 0
+                        ? () async {
+                            await cartVM
+                                .decrementarCantidadItem(producto.idProducto);
+                            setState(() {});
+                          }
+                        : null,
+                    icon: const Icon(Icons.remove),
+                  ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: Text(
+                      '$cantidadActual',
+                      key: ValueKey(cantidadActual),
+                      style: const TextStyle(fontSize: 18),
                     ),
                   ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Stock disponible: ${producto.stock}',
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-            if (producto.porcentajeDescuento > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  'Descuento: ${producto.porcentajeDescuento}%',
-                  style: const TextStyle(fontSize: 16, color: Colors.redAccent),
-                ),
-              ),
-            const Divider(height: 32),
-            const Text(
-              'Descripción del producto',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(producto.descripcion ?? 'Sin descripción.',
-                style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 24),
-            const Text(
-              'Especificaciones',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            _buildSpecItem('Categoría', producto.nombreCategoria),
-            _buildSpecItem('Dimensiones', producto.dimensiones),
-            _buildSpecItem(
-                'Peso', producto.peso != null ? '${producto.peso} kg' : null),
-            _buildSpecItem('Código de barras', producto.codigoBarras),
-            _buildSpecItem('Envío gratis', producto.tieneEnvio ? 'Sí' : 'No'),
-            const SizedBox(height: 24),
-            const Text('Cantidad',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            Row(
-              children: [
-                IconButton(
-                  onPressed: cantidadActual > 0
-                      ? () async {
-                          await cartVM
-                              .decrementarCantidadItem(producto.idProducto);
-                          setState(() {});
-                        }
-                      : null,
-                  icon: const Icon(Icons.remove),
-                ),
-                Text('$cantidadActual', style: const TextStyle(fontSize: 18)),
-                IconButton(
-                  onPressed: cantidadActual < producto.stock
-                      ? () async {
-                          if (cantidadActual == 0) {
-                            await cartVM.agregarProductoDirecto(
-                              productoId: producto.idProducto,
-                              cantidad: 1,
-                            );
-                          } else {
-                            await cartVM
-                                .incrementarCantidadItem(producto.idProducto);
+                  IconButton(
+                    onPressed: cantidadActual < producto.stock
+                        ? () async {
+                            if (cantidadActual == 0) {
+                              await cartVM.agregarProductoDirecto(
+                                productoId: producto.idProducto,
+                                cantidad: 1,
+                              );
+                            } else {
+                              await cartVM
+                                  .incrementarCantidadItem(producto.idProducto);
+                            }
+                            setState(() {});
                           }
-                          setState(() {});
-                        }
-                      : null,
-                  icon: const Icon(Icons.add),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: cantidadActual > 0
-                  ? () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MetodoPagoPage(total: cartVM.total, cantidad: cartVM.cantidad),
-                        ),
-                      );
-                    }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                minimumSize: const Size.fromHeight(50),
+                        : null,
+                    icon: const Icon(Icons.add),
+                  ),
+                ],
               ),
-              child: const Text('Ir a pagar', style: TextStyle(fontSize: 18)),
-            ),
-          ],
+
+              const SizedBox(height: 20),
+
+              /// Botón de pago
+              SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final supabase = Supabase.instance.client;
+                      final user = supabase.auth.currentUser;
+
+                      if (user == null) {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16)),
+                              title: const Text('¡Ups!',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              content: const Text(
+                                  'Debes iniciar sesión para agregar productos al carrito.'),
+                              actions: [
+                                TextButton(
+                                  child: const Text('Cancelar'),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                                ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.orange,
+                                  ),
+                                  icon: const Icon(Icons.login),
+                                  label: const Text('Iniciar sesión'),
+                                  onPressed: () {
+                                    Navigator.of(context)
+                                        .pop(); // Cierra el diálogo
+                                    Navigator.pushNamed(context, '/login');
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        return;
+                      }
+
+                      final resultado = await cartVM.agregarProductoDirecto(
+                        productoId: producto.idProducto,
+                        cantidad: 1,
+                      );
+
+                      setState(() {}); // actualiza cantidad en la vista
+
+                      String titulo;
+                      String mensaje;
+                      Icon icono;
+
+                      switch (resultado) {
+                        case AgregadoResultado.agregadoNuevo:
+                          titulo = '¡Éxito!';
+                          mensaje = 'Producto agregado al carrito.';
+                          icono = const Icon(Icons.check_circle,
+                              color: Colors.green, size: 48);
+                          break;
+                        case AgregadoResultado.yaExiste:
+                          titulo = 'Ya agregado';
+                          mensaje = 'Este producto ya está en tu carrito.';
+                          icono = const Icon(Icons.info,
+                              color: Colors.blueGrey, size: 48);
+                          break;
+                        case AgregadoResultado.sinStock:
+                          titulo = 'Sin stock';
+                          mensaje =
+                              'No hay suficiente stock para agregar este producto.';
+                          icono = const Icon(Icons.warning_amber,
+                              color: Colors.orange, size: 48);
+                          break;
+                        default:
+                          titulo = 'Error';
+                          mensaje = 'Ocurrió un error al agregar el producto.';
+                          icono = const Icon(Icons.error,
+                              color: Colors.red, size: 48);
+                      }
+
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            title: Row(
+                              children: [
+                                icono,
+                                const SizedBox(width: 12),
+                                Text(titulo,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            content: Text(mensaje),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('Aceptar'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.add_shopping_cart),
+                    label: const Text('Agregar al carrito',
+                        style: TextStyle(fontSize: 18)),
+                  )),
+
+              const SizedBox(height: 32),
+
+              /// Descripción
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Descripción del producto',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Text(producto.descripcion ??
+                          'Sin descripción disponible.'),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              /// Especificaciones
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Especificaciones',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      _buildSpecItem('Categoría', producto.nombreCategoria),
+                      _buildSpecItem('Dimensiones', producto.dimensiones),
+                      _buildSpecItem('Peso',
+                          producto.peso != null ? '${producto.peso} kg' : null),
+                      _buildSpecItem('Código de barras', producto.codigoBarras),
+                      _buildSpecItem(
+                          'Envío gratis', producto.tieneEnvio ? 'Sí' : 'No'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );

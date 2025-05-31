@@ -1,9 +1,11 @@
+import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:final_project/data/models/productos.dart';
 import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
 import 'package:final_project/views/home/widgets/custom_appBar_home.dart';
 import 'package:final_project/views/home/widgets/custom_footer.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Productos extends StatefulWidget {
   const Productos({super.key});
@@ -212,12 +214,133 @@ class _ProductosState extends State<Productos> {
                         ? SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: () {
-                                // Lógica real de agregar al carrito
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                        '${producto.nombre} agregado al carrito'),
+                              onPressed: () async {
+                                final supabase = Supabase.instance.client;
+                                final user = supabase.auth.currentUser;
+
+                                if (user == null) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(16)),
+                                      title: const Text('¡Ups!'),
+                                      content: const Text(
+                                          'Debes iniciar sesión para agregar productos al carrito.'),
+                                      actions: [
+                                        TextButton(
+                                          child: const Text('Cancelar'),
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(),
+                                        ),
+                                        ElevatedButton.icon(
+                                          icon: const Icon(Icons.login),
+                                          label: const Text('Iniciar sesión'),
+                                          style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.orange),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                            Navigator.pushNamed(
+                                                context, '/login');
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                // ⏳ Mostrar pantalla de carga
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (_) => Dialog(
+                                    backgroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(16)),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: const [
+                                          CircularProgressIndicator(
+                                              color: Colors.orange),
+                                          SizedBox(height: 16),
+                                          Text('Agregando al carrito...'),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+
+                                final cartVM = Provider.of<CartViewModel>(
+                                    context,
+                                    listen: false);
+                                final resultado =
+                                    await cartVM.agregarProductoDirecto(
+                                  productoId: producto.idProducto,
+                                  cantidad: 1,
+                                );
+
+                                Navigator.of(context)
+                                    .pop(); // ❌ Cierra el diálogo de carga
+
+                                // ✅ Mostrar resultado
+                                String titulo;
+                                String mensaje;
+                                Icon icono;
+
+                                switch (resultado) {
+                                  case AgregadoResultado.agregadoNuevo:
+                                    titulo = '¡Agregado!';
+                                    mensaje =
+                                        '${producto.nombre} fue agregado al carrito.';
+                                    icono = const Icon(Icons.check_circle,
+                                        color: Colors.green, size: 48);
+                                    break;
+                                  case AgregadoResultado.yaExiste:
+                                    titulo = 'Ya en el carrito';
+                                    mensaje =
+                                        'Este producto ya está en tu carrito.';
+                                    icono = const Icon(Icons.info_outline,
+                                        color: Colors.blue, size: 48);
+                                    break;
+                                  case AgregadoResultado.sinStock:
+                                    titulo = 'Sin stock';
+                                    mensaje =
+                                        'No hay suficiente stock disponible.';
+                                    icono = const Icon(Icons.warning_amber,
+                                        color: Colors.orange, size: 48);
+                                    break;
+                                  default:
+                                    titulo = 'Error';
+                                    mensaje =
+                                        'Ocurrió un error al agregar el producto.';
+                                    icono = const Icon(Icons.error_outline,
+                                        color: Colors.red, size: 48);
+                                }
+
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(16)),
+                                    title: Row(children: [
+                                      icono,
+                                      const SizedBox(width: 12),
+                                      Text(titulo)
+                                    ]),
+                                    content: Text(mensaje),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(),
+                                        child: const Text('Aceptar'),
+                                      ),
+                                    ],
                                   ),
                                 );
                               },
