@@ -3,7 +3,6 @@ import 'package:final_project/views/home/widgets/custom_appBar_home.dart';
 import 'package:final_project/views/home/widgets/popup.dart';
 import 'package:flutter/material.dart';
 import 'package:final_project/data/models/productos.dart';
-import 'package:final_project/views/home/sections/info_producto.dart';
 import 'package:provider/provider.dart';
 
 class UniversalTopBarWrapper extends StatefulWidget {
@@ -12,6 +11,8 @@ class UniversalTopBarWrapper extends StatefulWidget {
   final double expandedHeight;
   final Color appBarColor;
   final Widget flexibleSpace;
+  final void Function(String)? onSearchSubmitted;
+  final void Function(String)? onSearchChanged;
 
   const UniversalTopBarWrapper({
     super.key,
@@ -20,6 +21,8 @@ class UniversalTopBarWrapper extends StatefulWidget {
     required this.expandedHeight,
     required this.appBarColor,
     required this.flexibleSpace,
+    this.onSearchSubmitted,
+    this.onSearchChanged,
   });
 
   @override
@@ -29,7 +32,7 @@ class UniversalTopBarWrapper extends StatefulWidget {
 class _UniversalTopBarWrapperState extends State<UniversalTopBarWrapper>
     with WidgetsBindingObserver {
   final TextEditingController _searchController = TextEditingController();
-  final GlobalKey _wrapperSearchKey = GlobalKey(); // ✅ NOMBRE UNICO
+  final GlobalKey _wrapperSearchKey = GlobalKey();
   List<Producto> _resultados = [];
 
   double _popupTop = 0;
@@ -60,16 +63,15 @@ class _UniversalTopBarWrapperState extends State<UniversalTopBarWrapper>
   }
 
   void _buscar(String texto) {
-    final vm = Provider.of<ProductViewModel>(context, listen: false);
-    vm.buscar(texto); // 🔥 actualiza los productos filtrados globalmente
-
     if (texto.trim().isEmpty) {
       setState(() => _resultados = []);
     } else {
+      final query = texto.toLowerCase().trim();
       setState(() {
         _resultados = widget.allProducts
             .where((p) =>
-                p.nombre.toLowerCase().contains(texto.toLowerCase().trim()))
+                p.nombre.toLowerCase().contains(query) ||
+                (p.nombreCategoria?.toLowerCase() ?? '').contains(query))
             .toList();
       });
       _calcularPosicion();
@@ -91,7 +93,7 @@ class _UniversalTopBarWrapperState extends State<UniversalTopBarWrapper>
 
   @override
   Widget build(BuildContext context) {
-    final bool showPopup = _searchController.text.trim().isNotEmpty;
+    final bool showPopup = _resultados.isNotEmpty;
 
     return Scaffold(
       drawer: UniversalTopBar.buildDrawer(context),
@@ -106,9 +108,10 @@ class _UniversalTopBarWrapperState extends State<UniversalTopBarWrapper>
                 expandedHeight: widget.expandedHeight,
                 allProducts: widget.allProducts,
                 searchController: _searchController,
-                onSearchChanged: _buscar,
+                onSearchChanged: widget.onSearchChanged ?? _buscar,
+                onSearchSubmitted: widget.onSearchSubmitted ?? _buscar,
                 searchResults: _resultados,
-                searchKey: _wrapperSearchKey, // ✅ FIX: uso correcto
+                searchKey: _wrapperSearchKey,
                 flexibleSpace: widget.flexibleSpace,
               ),
               SliverToBoxAdapter(child: widget.child),

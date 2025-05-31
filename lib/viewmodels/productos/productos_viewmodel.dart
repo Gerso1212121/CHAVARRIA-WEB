@@ -118,4 +118,5 @@ class ProductViewModel extends ChangeNotifier {
 
     return productosFiltrados.take(cantidad).toList();
   }
+  
 }

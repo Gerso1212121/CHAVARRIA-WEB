@@ -68,7 +68,16 @@ class _ProductosState extends State<Productos> {
           appBarColor: const Color(0xFF333333),
           allProducts: vm.todosLosProductos,
           searchController: _searchController,
-          onSearchChanged: vm.buscar,
+          onSearchSubmitted: (text) async {
+            final query = text.trim();
+            if (query.isEmpty) {
+              await vm.loadProducts(); // o vm.cargarProductos();
+              setState(() {});
+            } else {
+              vm.buscar(query);
+              setState(() {});
+            }
+          },
           searchResults: vm.productos,
           searchKey: _searchKey,
         ),

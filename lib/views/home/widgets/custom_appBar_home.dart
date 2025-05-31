@@ -22,6 +22,7 @@ class UniversalTopBar extends StatefulWidget {
   final List<Producto> allProducts;
   final TextEditingController? searchController;
   final Function(String)? onSearchChanged;
+  final Function(String)? onSearchSubmitted;
   final List<Producto>? searchResults;
   final GlobalKey? searchKey;
 
@@ -34,6 +35,7 @@ class UniversalTopBar extends StatefulWidget {
     required this.allProducts,
     this.searchController,
     this.onSearchChanged,
+    this.onSearchSubmitted,
     this.searchResults,
     this.searchKey,
   }) : super(key: key);
@@ -335,12 +337,7 @@ class _UniversalTopBarState extends State<UniversalTopBar> {
             key: widget.searchKey,
             controller: widget.searchController,
             onChanged: widget.onSearchChanged,
-            onSubmitted: (text) {
-              if (text.trim().isNotEmpty) {
-                widget.onSearchChanged?.call(text);
-                Navigator.pushNamed(context, '/productos');
-              }
-            },
+            onSubmitted: widget.onSearchSubmitted,
             decoration: InputDecoration(
               hintText: "Buscar...",
               border: InputBorder.none,
@@ -451,12 +448,7 @@ class _UniversalTopBarState extends State<UniversalTopBar> {
                   key: widget.searchKey,
                   controller: widget.searchController,
                   onChanged: widget.onSearchChanged,
-                  onSubmitted: (text) {
-                    if (text.trim().isNotEmpty) {
-                      widget.onSearchChanged?.call(text);
-                      Navigator.pushNamed(context, '/productos');
-                    }
-                  },
+                  onSubmitted: widget.onSearchSubmitted,
                   decoration: const InputDecoration(
                     hintText: "Busca aquí...",
                     border: InputBorder.none,

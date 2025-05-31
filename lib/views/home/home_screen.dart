@@ -7,10 +7,8 @@ import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
 import 'package:final_project/views/home/widgets/custom_carrusel.dart';
 import 'package:final_project/views/home/widgets/custom_footer.dart';
 import 'package:final_project/views/home/widgets/custom_categorias.dart';
-import 'package:final_project/views/home/widgets/popup.dart';
 import 'package:final_project/views/home/widgets/custom_APPBARUNIVERSAL.dart';
 
-/// Example HomePage using the UniversalTopBarWrapper:
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -86,6 +84,7 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
+      onSearchChanged: null,
       child: Column(
         children: const [
           DestacadosYCategorias(),
