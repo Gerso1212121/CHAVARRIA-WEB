@@ -6,7 +6,7 @@ import 'package:final_project/data/models/productos.dart';
 import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
 import 'package:final_project/views/home/widgets/custom_carrusel.dart';
 import 'package:final_project/views/home/widgets/custom_footer.dart';
-import 'package:final_project/views/home/widgets/custom_datos.dart';
+import 'package:final_project/views/home/widgets/custom_categorias.dart';
 import 'package:final_project/views/home/widgets/popup.dart';
 import 'package:final_project/views/home/widgets/custom_APPBARUNIVERSAL.dart';
 

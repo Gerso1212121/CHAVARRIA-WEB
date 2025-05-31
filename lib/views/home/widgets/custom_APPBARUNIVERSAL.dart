@@ -1,8 +1,10 @@
+import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
 import 'package:final_project/views/home/widgets/custom_appBar_home.dart';
 import 'package:final_project/views/home/widgets/popup.dart';
 import 'package:flutter/material.dart';
 import 'package:final_project/data/models/productos.dart';
 import 'package:final_project/views/home/sections/info_producto.dart';
+import 'package:provider/provider.dart';
 
 class UniversalTopBarWrapper extends StatefulWidget {
   final Widget child;
@@ -58,12 +60,16 @@ class _UniversalTopBarWrapperState extends State<UniversalTopBarWrapper>
   }
 
   void _buscar(String texto) {
+    final vm = Provider.of<ProductViewModel>(context, listen: false);
+    vm.buscar(texto); // 🔥 actualiza los productos filtrados globalmente
+
     if (texto.trim().isEmpty) {
       setState(() => _resultados = []);
     } else {
       setState(() {
         _resultados = widget.allProducts
-            .where((p) => p.nombre.toLowerCase().contains(texto.toLowerCase().trim()))
+            .where((p) =>
+                p.nombre.toLowerCase().contains(texto.toLowerCase().trim()))
             .toList();
       });
       _calcularPosicion();
@@ -71,7 +77,8 @@ class _UniversalTopBarWrapperState extends State<UniversalTopBarWrapper>
   }
 
   void _calcularPosicion() {
-    final RenderBox? box = _wrapperSearchKey.currentContext?.findRenderObject() as RenderBox?;
+    final RenderBox? box =
+        _wrapperSearchKey.currentContext?.findRenderObject() as RenderBox?;
     if (box != null) {
       final offset = box.localToGlobal(Offset.zero);
       setState(() {
