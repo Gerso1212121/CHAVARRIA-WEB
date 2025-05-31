@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:final_project/views/home/widgets/custom_appBar_home.dart';
 import 'package:final_project/views/home/widgets/custom_footer.dart';
 import 'package:final_project/data/models/productos.dart';
@@ -19,6 +18,28 @@ class _ProductosState extends State<Productos> {
   final TextEditingController _searchController = TextEditingController();
   final GlobalKey _searchKey = GlobalKey();
 
+  final List<String> categorias = [
+    'Sala de estar',
+    'Comedor',
+    'Dormitorio',
+    'Oficina',
+    'Almacenamiento',
+    'Exterior',
+  ];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null && args.containsKey('categoria')) {
+      final categoriaArg = args['categoria'] as String?;
+      if (categorias.contains(categoriaArg)) {
+        categoriaSeleccionada = categoriaArg;
+      }
+    }
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -28,13 +49,13 @@ class _ProductosState extends State<Productos> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ProductViewModel>();
-    final productos = vm.filtrarProductos(
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 700;
+    final productos = vm.obtenerProductosParaVista(
+      isMobile: isMobile,
       categoria: categoriaSeleccionada,
       ordenPrecio: ordenPrecio,
     );
-
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 700;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -58,14 +79,14 @@ class _ProductosState extends State<Productos> {
             isMobile
                 ? Column(
                     children: [
-                      _buildFiltros(vm, isMobile),
+                      _buildFiltros(isMobile),
                       _buildProductosGrid(productos, isMobile),
                     ],
                   )
                 : Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildFiltros(vm, isMobile),
+                      _buildFiltros(isMobile),
                       Expanded(child: _buildProductosGrid(productos, isMobile)),
                     ],
                   ),
@@ -76,73 +97,78 @@ class _ProductosState extends State<Productos> {
     );
   }
 
-  Widget _buildFiltros(ProductViewModel vm, bool isMobile) {
-    return Container(
-      width: isMobile ? double.infinity : 280,
-      margin: const EdgeInsets.all(12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(0, 2),
+Widget _buildFiltros(bool isMobile) {
+  final List<String> categoriasConTodos = ['Todos', ...categorias];
+
+  return Container(
+    width: isMobile ? double.infinity : 280,
+    margin: const EdgeInsets.all(12),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: const [
+        BoxShadow(
+          color: Colors.black12,
+          blurRadius: 4,
+          offset: Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Filtrado por:",
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          value: categoriaSeleccionada,
+          hint: const Text("Categoría"),
+          decoration: const InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("Filtrado por:",
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            value: categoriaSeleccionada,
-            hint: const Text("Categoría"),
-            decoration: const InputDecoration(
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(),
+          items: categoriasConTodos.map((categoria) {
+            return DropdownMenuItem(
+              value: categoria,
+              child: Text(categoria),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              categoriaSeleccionada = value == 'Todos' ? null : value;
+            });
+          },
+        ),
+        const SizedBox(height: 16),
+        DropdownButtonFormField<String>(
+          value: ordenPrecio,
+          hint: const Text("Ordenar por precio"),
+          decoration: const InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(),
+          ),
+          items: const [
+            DropdownMenuItem(
+              value: 'asc',
+              child: Text('Menor a mayor'),
             ),
-            items: vm.obtenerCategorias().map((categoria) {
-              return DropdownMenuItem(
-                value: categoria,
-                child: Text(categoria),
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() => categoriaSeleccionada = value);
-            },
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            value: ordenPrecio,
-            hint: const Text("Ordenar por precio"),
-            decoration: const InputDecoration(
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(),
+            DropdownMenuItem(
+              value: 'desc',
+              child: Text('Mayor a menor'),
             ),
-            items: const [
-              DropdownMenuItem(
-                value: 'asc',
-                child: Text('Menor a mayor'),
-              ),
-              DropdownMenuItem(
-                value: 'desc',
-                child: Text('Mayor a menor'),
-              ),
-            ],
-            onChanged: (value) {
-              setState(() => ordenPrecio = value);
-            },
-          ),
-        ],
-      ),
-    );
-  }
+          ],
+          onChanged: (value) {
+            setState(() => ordenPrecio = value);
+          },
+        ),
+      ],
+    ),
+  );
+}
+
 
   Widget _buildProductosGrid(List<Producto> productos, bool isMobile) {
     if (productos.isEmpty) {

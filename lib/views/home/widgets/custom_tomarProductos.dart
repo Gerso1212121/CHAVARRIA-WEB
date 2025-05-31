@@ -1,13 +1,50 @@
-import 'package:final_project/views/home/sections/productos.dart';
-import 'package:final_project/views/home/widgets/animations/custom_chargin.dart';
+import 'package:final_project/repositories/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:final_project/data/models/productos.dart';
-import 'package:final_project/repositories/auth_repository.dart';
+import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
 import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
+import 'package:final_project/data/models/productos.dart';
 import 'package:final_project/views/auth/vista_login.dart';
-import 'package:final_project/views/home/sections/detalle_producto.dart';
+import 'package:final_project/views/home/sections/info_producto.dart';
+import 'package:final_project/views/home/widgets/animations/custom_chargin.dart';
 import 'package:final_project/views/home/widgets/custom_showdialog.dart';
+
+class Catalogos extends StatelessWidget {
+  const Catalogos({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final productosVM = Provider.of<ProductViewModel>(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    if (productosVM.isLoading) {
+      return const Center(child: FullScreenLoader());
+    }
+
+    final productosParaMostrar =
+        productosVM.obtenerProductosParaVista(isMobile: isMobile);
+
+    if (productosParaMostrar.isEmpty) {
+      return const Center(child: Text("No hay productos disponibles."));
+    }
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: productosParaMostrar.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isMobile ? 2 : 4,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.65,
+      ),
+      itemBuilder: (context, index) {
+        final producto = productosParaMostrar[index];
+        return ProductCard(producto: producto);
+      },
+    );
+  }
+}
 
 class ProductCard extends StatefulWidget {
   final Producto producto;
@@ -59,8 +96,7 @@ class _ProductCardState extends State<ProductCard> {
             children: [
               if (p.porcentajeDescuento > 0 && p.stock > 0)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.yellow[700],
                     borderRadius: const BorderRadius.only(
@@ -156,8 +192,7 @@ class _ProductCardState extends State<ProductCard> {
               Container(
                 width: double.infinity,
                 color: Colors.brown.shade100,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -213,7 +248,7 @@ class _ProductCardState extends State<ProductCard> {
                     backgroundColor: const Color(0xFFEC7521),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: const RoundedRectangleBorder(), // Sin border radius
+                    shape: const RoundedRectangleBorder(),
                   ),
                   onPressed: () async {
                     showDialog(
@@ -228,8 +263,7 @@ class _ProductCardState extends State<ProductCard> {
                       showFeedbackDialog(
                         context: context,
                         title: 'Inicia sesión',
-                        message:
-                            'Debes iniciar sesión para agregar productos al carrito.',
+                        message: 'Debes iniciar sesión para agregar productos al carrito.',
                         isSuccess: false,
                         actions: [
                           TextButton(
@@ -244,18 +278,15 @@ class _ProductCardState extends State<ProductCard> {
                                 MaterialPageRoute(builder: (_) => LoginPage()),
                               );
                             },
-                            child: const Text('Inicia aquí',
-                                style: TextStyle(color: Colors.blue)),
+                            child: const Text('Inicia aquí', style: TextStyle(color: Colors.blue)),
                           ),
                         ],
                       );
                       return;
                     }
 
-                    final cartVM =
-                        Provider.of<CartViewModel>(context, listen: false);
-                    final result = await cartVM.agregarProductoDirecto(
-                        productoId: p.idProducto);
+                    final cartVM = Provider.of<CartViewModel>(context, listen: false);
+                    final result = await cartVM.agregarProductoDirecto(productoId: p.idProducto);
 
                     Navigator.of(context).pop();
 
@@ -299,9 +330,7 @@ class _ProductCardState extends State<ProductCard> {
                   },
                   child: const Text(
                     'Agregar al carrito',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

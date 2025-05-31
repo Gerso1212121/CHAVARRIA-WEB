@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
 import 'package:final_project/views/home/widgets/custom_carrusel.dart';
-import 'package:final_project/views/home/widgets/custom_producto.dart';
+import 'package:final_project/views/home/widgets/custom_tomarProductos.dart';
 
 class DestacadosYCategorias extends StatelessWidget {
   const DestacadosYCategorias({super.key});
@@ -11,6 +11,22 @@ class DestacadosYCategorias extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+    final isTablet = screenWidth >= 600 && screenWidth < 1024;
+
+    int getCrossAxisCount() {
+      if (isMobile) return 2;
+      if (isTablet) return 3;
+      return 4;
+    }
+
+    final categorias = [
+      {'nombre': 'Sala de estar', 'icono': Icons.weekend},
+      {'nombre': 'Comedor', 'icono': Icons.restaurant},
+      {'nombre': 'Dormitorio', 'icono': Icons.bed},
+      {'nombre': 'Oficina', 'icono': Icons.chair},
+      {'nombre': 'Almacenamiento', 'icono': Icons.inventory_2},
+      {'nombre': 'Exterior', 'icono': Icons.park},
+    ];
 
     return Container(
       color: Colors.grey.shade50,
@@ -41,48 +57,45 @@ class DestacadosYCategorias extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              'Explora por categoría (Scrolea horizontal)',
+              'Explora por categoría',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 20),
-          Align(
-            alignment: Alignment.center,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.center, // 🔥 Centro horizontal
-                children: const [
-                  CategoriaItem(
-                    imageUrl:
-                        'https://images.pexels.com/photos/3356416/pexels-photo-3356416.jpeg',
-                    label: 'Rebajas',
-                  ),
-                  CategoriaItem(
-                    imageUrl:
-                        'https://images.pexels.com/photos/3356416/pexels-photo-3356416.jpeg',
-                    label: 'Fragancias',
-                  ),
-                  CategoriaItem(
-                    imageUrl:
-                        'https://images.pexels.com/photos/3356416/pexels-photo-3356416.jpeg',
-                    label: 'Fragancias',
-                  ),
-                  CategoriaItem(
-                    imageUrl:
-                        'https://images.pexels.com/photos/3356416/pexels-photo-3356416.jpeg',
-                    label: 'Fragancias',
-                  ),
-                  CategoriaItem(
-                    imageUrl:
-                        'https://images.pexels.com/photos/3356416/pexels-photo-3356416.jpeg',
-                    label: 'Fragancias',
-                  ),
-                ],
-              ),
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 600;
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: isMobile
+                    ? GridView.count(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                        childAspectRatio: 1,
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        children: categorias
+                            .map((categoria) => CategoriaItem(
+                                  icon: categoria['icono'] as IconData,
+                                  label: categoria['nombre'] as String,
+                                ))
+                            .toList(),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: categorias
+                            .map((categoria) => Expanded(
+                                  child: CategoriaItem(
+                                    icon: categoria['icono'] as IconData,
+                                    label: categoria['nombre'] as String,
+                                  ),
+                                ))
+                            .toList(),
+                      ),
+              );
+            },
           ),
           const SizedBox(height: 32),
           const Divider(thickness: 1.2, height: 50),
@@ -101,7 +114,7 @@ class DestacadosYCategorias extends StatelessWidget {
               }
 
               final filteredOffers = viewModel.productos
-                  .where((p) => p.porcentajeDescuento > 0)
+                  .where((p) => p.porcentajeDescuento > 0 && p.stock > 0)
                   .take(6)
                   .toList();
 
@@ -112,15 +125,13 @@ class DestacadosYCategorias extends StatelessWidget {
               return SizedBox(
                 height: 400,
                 child: isMobile
-                    ? ListView.builder(
+                    ? ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        itemCount: filteredOffers.length,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: filteredOffers.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 12),
                         itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 12),
-                            child: ProductCard(producto: filteredOffers[index]),
-                          );
+                          return ProductCard(producto: filteredOffers[index]);
                         },
                       )
                     : Padding(
@@ -130,8 +141,8 @@ class DestacadosYCategorias extends StatelessWidget {
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: filteredOffers.length,
                           gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: getCrossAxisCount(),
                             crossAxisSpacing: 20,
                             mainAxisSpacing: 20,
                             childAspectRatio: 0.75,
@@ -159,8 +170,10 @@ class DestacadosYCategorias extends StatelessWidget {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final filteredNoOffers =
-                  viewModel.productosSinOferta.take(6).toList();
+              final filteredNoOffers = viewModel.productosSinOferta
+                  .where((p) => p.stock > 0)
+                  .take(6)
+                  .toList();
 
               if (filteredNoOffers.isEmpty) {
                 return const Center(child: Text('No hay productos sin oferta'));
@@ -169,16 +182,13 @@ class DestacadosYCategorias extends StatelessWidget {
               return SizedBox(
                 height: 400,
                 child: isMobile
-                    ? ListView.builder(
+                    ? ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        itemCount: filteredNoOffers.length,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: filteredNoOffers.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 12),
                         itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 12),
-                            child:
-                                ProductCard(producto: filteredNoOffers[index]),
-                          );
+                          return ProductCard(producto: filteredNoOffers[index]);
                         },
                       )
                     : Padding(
@@ -188,8 +198,8 @@ class DestacadosYCategorias extends StatelessWidget {
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: filteredNoOffers.length,
                           gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: getCrossAxisCount(),
                             crossAxisSpacing: 20,
                             mainAxisSpacing: 20,
                             childAspectRatio: 0.75,
@@ -217,6 +227,10 @@ class BeneficioItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final iconSize = screenWidth < 600 ? 24.0 : 32.0;
+    final fontSize = screenWidth < 600 ? 13.0 : 16.0;
+
     return Column(
       children: [
         Container(
@@ -232,14 +246,14 @@ class BeneficioItem extends StatelessWidget {
               ),
             ],
           ),
-          child: Icon(icon, size: 28, color: Colors.orange),
+          child: Icon(icon, size: iconSize, color: Colors.orange),
         ),
         const SizedBox(height: 10),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w600,
-            fontSize: 15,
+            fontSize: fontSize,
           ),
         ),
       ],
@@ -247,65 +261,56 @@ class BeneficioItem extends StatelessWidget {
   }
 }
 
-class CategoriaItem extends StatefulWidget {
-  final String imageUrl;
+class CategoriaItem extends StatelessWidget {
+  final IconData icon;
   final String label;
 
   const CategoriaItem({
     super.key,
-    required this.imageUrl,
+    required this.icon,
     required this.label,
   });
 
   @override
-  State<CategoriaItem> createState() => _CategoriaItemState();
-}
-
-class _CategoriaItemState extends State<CategoriaItem> {
-  bool _hovering = false;
-
-  @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    final iconSize = isMobile ? 40.0 : 60.0;
+    final fontSize = isMobile ? 12.0 : 16.0;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          '/productos',
+          arguments: {'categoria': label},
+        );
+      },
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            padding: const EdgeInsets.all(2),
+          Container(
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
+              color: Colors.orange.shade50,
               shape: BoxShape.circle,
               boxShadow: [
-                if (_hovering)
-                  BoxShadow(
-                    color: Colors.orange.withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  )
+                BoxShadow(
+                  color: Colors.orange.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
               ],
             ),
-            child: ClipOval(
-              child: Image.network(
-                widget.imageUrl,
-                width: 170,
-                height: 170,
-                fit: BoxFit.cover,
-              ),
-            ),
+            child: Icon(icon, size: iconSize, color: Colors.orange),
           ),
-          const SizedBox(height: 6),
-          SizedBox(
-            width: 300,
-            child: Text(
-              widget.label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-            ),
-          )
+          const SizedBox(height: 8),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w500),
+          ),
         ],
       ),
     );

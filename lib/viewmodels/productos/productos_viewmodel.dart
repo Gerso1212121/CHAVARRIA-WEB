@@ -1,6 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:final_project/data/models/productos.dart';
 import 'package:final_project/repositories/productos_usuario.dart';
-import 'package:flutter/material.dart';
 
 class ProductViewModel extends ChangeNotifier {
   final ProductRepository _repository;
@@ -13,7 +13,7 @@ class ProductViewModel extends ChangeNotifier {
   List<Producto> get todosLosProductos => _todos;
 
   List<Producto> get productosSinOferta =>
-      _visibles.where((p) => p.porcentajeDescuento == 0).toList();
+      _visibles.where((p) => p.porcentajeDescuento == 0 && p.stock > 0).toList();
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -56,8 +56,9 @@ class ProductViewModel extends ChangeNotifier {
 
   List<String> obtenerCategorias() {
     final categorias = _todos
-        .map((p) => p.nombreCategoria ?? 'Sin categoría')
+        .map((p) => p.nombreCategoria?.trim() ?? 'Sin categoría')
         .toSet()
+        .where((cat) => cat.isNotEmpty)
         .toList();
     categorias.sort();
     return categorias;
@@ -69,8 +70,8 @@ class ProductViewModel extends ChangeNotifier {
     if (categoria != null && categoria.isNotEmpty) {
       filtrados = filtrados
           .where((producto) =>
-              (producto.nombreCategoria ?? '').toLowerCase() ==
-              categoria.toLowerCase())
+              (producto.nombreCategoria ?? '').toLowerCase().trim() ==
+              categoria.toLowerCase().trim())
           .toList();
     }
 
@@ -83,5 +84,38 @@ class ProductViewModel extends ChangeNotifier {
     }
 
     return filtrados;
+  }
+
+  List<Producto> obtenerProductosConStock() {
+    return _todos.where((p) => p.stock > 0).toList();
+  }
+
+  List<Producto> obtenerProductosParaVista({
+    required bool isMobile,
+    String? categoria,
+    String? ordenPrecio,
+  }) {
+    List<Producto> productosFiltrados =
+        _todos.where((p) => p.stock > 0).toList();
+
+    if (categoria != null && categoria.isNotEmpty) {
+      productosFiltrados = productosFiltrados
+          .where((p) =>
+              (p.nombreCategoria ?? '').toLowerCase().trim() ==
+              categoria.toLowerCase().trim())
+          .toList();
+    }
+
+    if (ordenPrecio != null) {
+      if (ordenPrecio == 'asc') {
+        productosFiltrados.sort((a, b) => (a.precio ?? 0).compareTo(b.precio ?? 0));
+      } else if (ordenPrecio == 'desc') {
+        productosFiltrados.sort((a, b) => (b.precio ?? 0).compareTo(a.precio ?? 0));
+      }
+    }
+
+    final int cantidad = isMobile ? 6 : 12;
+
+    return productosFiltrados.take(cantidad).toList();
   }
 }

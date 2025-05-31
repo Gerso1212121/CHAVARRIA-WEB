@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:final_project/views/home/sections/realizar%20compra.dart';
+import 'package:final_project/views/home/sections/realizar_compra.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
@@ -25,7 +25,6 @@ class CartPage extends StatelessWidget {
           final isWide = MediaQuery.of(context).size.width > 700;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -58,40 +57,47 @@ class CartPage extends StatelessWidget {
 
   Widget _buildWideLayout(
       BuildContext context, List cartItems, CartViewModel cartViewModel) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: cartItems.isEmpty
-              ? const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text('Tu carrito está vacío.'),
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: cartItems.map<Widget>((item) {
-                    return _buildCartItem(item, cartViewModel);
-                  }).toList(),
-                ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 1,
-          child: _buildResumen(context, cartViewModel),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: cartItems.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text('Tu carrito está vacío.'),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: cartItems.map<Widget>((item) {
+                      return _buildCartItem(item, cartViewModel);
+                    }).toList(),
+                  ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 1,
+            child: _buildResumen(context, cartViewModel),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildMobileLayout(
       BuildContext context, List cartItems, CartViewModel cartViewModel) {
-    return Column(
-      children: [
-        ...cartItems.map<Widget>((item) => _buildCartItem(item, cartViewModel)),
-        const SizedBox(height: 24),
-        _buildResumen(context, cartViewModel),
-      ],
+    return Padding(
+      padding: const EdgeInsets.all(6),
+      child: Column(
+        children: [
+          ...cartItems
+              .map<Widget>((item) => _buildCartItem(item, cartViewModel)),
+          const SizedBox(height: 24),
+          _buildResumen(context, cartViewModel),
+        ],
+      ),
     );
   }
 
@@ -201,14 +207,36 @@ class CartPage extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 12),
-          Text('Subtotal: \$${total.toStringAsFixed(2)}'),
+          Text('Subtotal: \$${total}'),
           const SizedBox(height: 8),
           Text(
             'Total: \$${total.toStringAsFixed(2)}',
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          const Text('Llegada estimada: 3 días'),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
+          const Divider(),
+          // AVISOS IMPORTANTES
+          const Text(
+            "🚚 El pago del envío se realiza aparte al momento de la entrega.",
+            style: TextStyle(fontSize: 13, color: Colors.redAccent),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            "El costo de envío varía entre \$10 y \$30 según la ubicación.",
+            style: TextStyle(fontSize: 13),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            "🛠️ El armado del mueble tiene un costo adicional de \$15 a \$20, dependiendo del tipo de mueble.",
+            style: TextStyle(fontSize: 13),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            "⏰ El tiempo estimado de envío es de 1 mes y medio a 2 meses.",
+            style: TextStyle(fontSize: 13),
+          ),
+          const Divider(),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(

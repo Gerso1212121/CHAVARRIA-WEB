@@ -1,11 +1,11 @@
-import 'package:final_project/views/home/sections/detalle_producto.dart';
+import 'package:final_project/views/home/sections/info_producto.dart';
 import 'package:flutter/material.dart';
 import 'package:final_project/data/models/productos.dart';
 import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
 import 'package:final_project/views/auth/vista_login.dart';
 import 'package:final_project/views/home/home_screen.dart';
 import 'package:final_project/views/home/sections/carrito_detalle.dart';
-import 'package:final_project/views/home/sections/productos.dart';
+import 'package:final_project/views/home/sections/catalogos.dart';
 import 'package:final_project/views/home/sections/perfil.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

@@ -2,7 +2,7 @@ import 'package:final_project/views/home/widgets/custom_appBar_home.dart';
 import 'package:final_project/views/home/widgets/popup.dart';
 import 'package:flutter/material.dart';
 import 'package:final_project/data/models/productos.dart';
-import 'package:final_project/views/home/sections/detalle_producto.dart';
+import 'package:final_project/views/home/sections/info_producto.dart';
 
 class UniversalTopBarWrapper extends StatefulWidget {
   final Widget child;

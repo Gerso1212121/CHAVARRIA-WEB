@@ -1,8 +1,8 @@
 import 'package:final_project/data/models/carrito.dart';
 import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
 import 'package:final_project/views/auth/vista_login.dart';
-import 'package:final_project/views/home/sections/productos.dart';
-import 'package:final_project/views/home/sections/realizar%20compra.dart';
+import 'package:final_project/views/home/sections/catalogos.dart';
+import 'package:final_project/views/home/sections/realizar_compra.dart';
 import 'package:final_project/views/home/widgets/custom_APPBARUNIVERSAL.dart';
 import 'package:final_project/views/home/widgets/custom_appBar_home.dart';
 import 'package:flutter/material.dart';

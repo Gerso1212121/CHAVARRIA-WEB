@@ -1,6 +1,6 @@
 import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
 import 'package:final_project/views/home/sections/pagocompleto.dart';
-import 'package:final_project/views/home/sections/productos.dart';
+import 'package:final_project/views/home/sections/catalogos.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

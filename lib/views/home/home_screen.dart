@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:final_project/views/home/sections/detalle_producto.dart';
+import 'package:final_project/views/home/sections/info_producto.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:final_project/data/models/productos.dart';
