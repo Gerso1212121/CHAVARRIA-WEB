@@ -1,6 +1,7 @@
 import 'package:final_project/data/models/productos.dart';
 import 'package:final_project/data/services/auth_service.dart';
 import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
+import 'package:final_project/viewmodels/servicios/viewmodel_pedidos.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -21,16 +22,15 @@ class _PerfilUsuarioPageState extends State<PerfilUsuarioPage> {
 
   final List<Producto> productosVacios = [];
   final TextEditingController buscadorController = TextEditingController();
+  final supabaseService = SupabaseService();
 
   @override
   void initState() {
     super.initState();
     cargarDatosUsuario();
   }
-  
 
   Future<void> cargarDatosUsuario() async {
-    final supabaseService = SupabaseService();
     final user = supabaseService.getCurrentUser();
 
     if (user == null) {
@@ -343,10 +343,7 @@ class _PerfilUsuarioPageState extends State<PerfilUsuarioPage> {
               )
             ],
           ),
-          child: const Text(
-            '📦 Aquí se mostraría el historial de pedidos.',
-            style: TextStyle(fontSize: 18),
-          ),
+          child: HistorialPedidos(usuario!['id_cliente']),
         ),
       );
     }
