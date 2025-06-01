@@ -17,7 +17,7 @@ class _MetodoPagoPageState extends State<MetodoPagoPage> {
   void _procesarPago() async {
     if (_metodoSeleccionado == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Por favor selecciona un método de pago.')),
+        const SnackBar(content: Text('Por favor selecciona un método de pago.')),
       );
       return;
     }
@@ -40,47 +40,143 @@ class _MetodoPagoPageState extends State<MetodoPagoPage> {
     if (confirmar == true) {
       if (_metodoSeleccionado == 'Wompi') {
         await lanzarPagoDesdeFlutter(context, widget.total);
-      } else if (_metodoSeleccionado == 'PayPal') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Redirigiendo a PayPal... (funcionalidad pendiente)')),
-        );
-        // Aquí implementarías redirección real a PayPal.
-      }
+      } 
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Pago'),
-        backgroundColor: const Color.fromRGBO(255, 152, 0, 1),
+        backgroundColor: Colors.orange[700],
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text('Pago', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 700),
+            child: isMobile
+                ? Column(
+                    children: [
+                      _buildDatosOperacion(),
+                      const SizedBox(height: 20),
+                      _buildSeccionWompi(),
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: _buildDatosOperacion()),
+                      const SizedBox(width: 20),
+                      Expanded(child: _buildSeccionWompi()),
+                    ],
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDatosOperacion() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Resumen del pedido', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            _buildResumenItem("Cantidad", widget.cantidad.toString()),
-            _buildResumenItem("Total a pagar", "\$${widget.total.toStringAsFixed(2)}"),
-            const SizedBox(height: 30),
-            const Text('Selecciona un método de pago:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            const Text("Datos de la operación", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Divider(),
+            _datoItem("Importe", "\$${widget.total.toStringAsFixed(2)}"),
+            _datoItem("Cantidad", widget.cantidad.toString()),
+            _datoItem("Comercio", "CARPINTERIA CHAVARRIA"),
+            _datoItem("Fecha", DateTime.now().toString().substring(0, 16)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _datoItem(String titulo, String valor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(titulo, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(valor, style: const TextStyle(color: Colors.black87)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSeccionWompi() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            const Text("Selecciona un método de pago", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 15),
             _buildMetodoTile("Wompi", Icons.account_balance_wallet_outlined),
-            _buildMetodoTile("PayPal", Icons.paypal),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _procesarPago,
-                child: const Text('Pagar ahora'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.green,
-                ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(12),
               ),
+              child: Row(
+                children: const [
+                  Icon(Icons.lock, color: Colors.black54),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      "Este comercio ofrece el servicio de Wompi para procesar el pago de manera segura.",
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[400],
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text("Cancelar"),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _procesarPago,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange[700],
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text("Pagar", style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -88,38 +184,18 @@ class _MetodoPagoPageState extends State<MetodoPagoPage> {
     );
   }
 
-  Widget _buildResumenItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 16)),
-          Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMetodoTile(String metodo, IconData icon) {
     return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: Icon(icon, size: 30),
-        title: Text(metodo, style: const TextStyle(fontSize: 16)),
+        leading: Icon(icon, size: 30, color: Colors.orange[800]),
+        title: Text(metodo, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
         trailing: Radio<String>(
           value: metodo,
           groupValue: _metodoSeleccionado,
-          onChanged: (value) {
-            setState(() {
-              _metodoSeleccionado = value;
-            });
-          },
+          onChanged: (value) => setState(() => _metodoSeleccionado = value),
         ),
-        onTap: () {
-          setState(() {
-            _metodoSeleccionado = metodo;
-          });
-        },
+        onTap: () => setState(() => _metodoSeleccionado = metodo),
       ),
     );
   }

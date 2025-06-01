@@ -1,40 +1,39 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 
-class SlideCarrusell extends StatefulWidget {
-  const SlideCarrusell({super.key});
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+
+class SlideCarousel extends StatefulWidget {
+  final List<String> imageUrls;
+  final double height;
+
+  const SlideCarousel({
+    Key? key,
+    required this.imageUrls,
+    this.height = 400,
+  }) : super(key: key);
 
   @override
-  State<SlideCarrusell> createState() => _SlideCarrusellState();
+  State<SlideCarousel> createState() => _SlideCarouselState();
 }
 
-class _SlideCarrusellState extends State<SlideCarrusell> {
+class _SlideCarouselState extends State<SlideCarousel> {
   late final PageController _controller;
-  late final Timer _timer;
+  late Timer _timer;
 
-  final List<String> _images = [
-    'https://cdn.pixabay.com/photo/2020/10/18/09/16/bedroom-5664221_1280.jpg',
-    'https://cdn.pixabay.com/photo/2016/11/18/17/20/living-room-1835923_1280.jpg',
-    'https://cdn.pixabay.com/photo/2020/05/24/09/52/sofa-5213406_1280.jpg',
-  ];
-
-  static const int _initialPage = 1000;
-  int _currentPage = _initialPage;
+  int _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
-    _controller = PageController(
-      viewportFraction: 0.85,
-      initialPage: _initialPage,
-    );
+    _controller = PageController(viewportFraction: 0.85);
 
-    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (_controller.hasClients) {
         _currentPage++;
         _controller.animateToPage(
           _currentPage,
-          duration: const Duration(milliseconds: 2000),
+          duration: const Duration(milliseconds: 1500),
           curve: Curves.easeInOut,
         );
       }
@@ -50,14 +49,12 @@ class _SlideCarrusellState extends State<SlideCarrusell> {
 
   @override
   Widget build(BuildContext context) {
-    final double height = MediaQuery.of(context).size.height * 0.4;
-
     return SizedBox(
-      height: 400,
+      height: widget.height,
       child: PageView.builder(
         controller: _controller,
         itemBuilder: (context, index) {
-          final image = _images[index % _images.length];
+          final image = widget.imageUrls[index % widget.imageUrls.length];
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: ClipRRect(
@@ -75,13 +72,15 @@ class _SlideCarrusellState extends State<SlideCarrusell> {
   }
 }
 
-//carusel de imagenes principal
-
 class FadingImageCarousel extends StatefulWidget {
-  final List<String> imagePaths; // rutas locales o URLs
+  final List<String> imagePaths;
+  final bool useNetwork;
 
-  const FadingImageCarousel({Key? key, required this.imagePaths})
-      : super(key: key);
+  const FadingImageCarousel({
+    Key? key,
+    required this.imagePaths,
+    this.useNetwork = false,
+  }) : super(key: key);
 
   @override
   State<FadingImageCarousel> createState() => _FadingImageCarouselState();
@@ -106,7 +105,6 @@ class _FadingImageCarouselState extends State<FadingImageCarousel>
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller);
 
     _controller.forward();
-
     _startImageLoop();
   }
 
@@ -134,12 +132,21 @@ class _FadingImageCarouselState extends State<FadingImageCarousel>
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: Image.asset(
-        widget.imagePaths[_currentImageIndex],
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-      ),
+      child: widget.useNetwork
+          ? Image.network(
+              widget.imagePaths[_currentImageIndex],
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+            )
+          : Image.asset(
+              widget.imagePaths[_currentImageIndex],
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
     );
   }
 }
+

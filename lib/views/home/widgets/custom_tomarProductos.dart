@@ -29,18 +29,24 @@ class Catalogos extends StatelessWidget {
       return const Center(child: Text("No hay productos disponibles."));
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: productosParaMostrar.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isMobile ? 2 : 4,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.65,
-      ),
-      itemBuilder: (context, index) {
-        final producto = productosParaMostrar[index];
-        return ProductCard(producto: producto);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobileLayout = constraints.maxWidth < 600;
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: productosParaMostrar.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: isMobileLayout ? 2 : 4,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: 0.65,
+          ),
+          itemBuilder: (context, index) {
+            final producto = productosParaMostrar[index];
+            return ProductCard(producto: producto);
+          },
+        );
       },
     );
   }
@@ -78,18 +84,17 @@ class _ProductCardState extends State<ProductCard> {
       margin: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: const [
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
           BoxShadow(
-            color: Colors.black12,
-            blurRadius: 6,
-            offset: Offset(0, 4),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
-          // OFERTA + CORAZÓN
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -98,55 +103,31 @@ class _ProductCardState extends State<ProductCard> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.yellow[700],
+                    color: Colors.orangeAccent,
                     borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(4),
+                      topLeft: Radius.circular(8),
                       bottomRight: Radius.circular(8),
                     ),
                   ),
-                  child: RichText(
-                    text: TextSpan(
-                      text: 'OFERTA ',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: '${p.porcentajeDescuento}%',
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                  child: Text(
+                    '-${p.porcentajeDescuento.toInt()}% OFF',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    isFavorite = !isFavorite;
-                  });
-                },
-                child: Container(
-                  margin: const EdgeInsets.only(top: 4, right: 4),
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: Colors.transparent,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorite ? Colors.red : Colors.grey,
-                    size: 22,
-                  ),
+              IconButton(
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? Colors.red : Colors.grey,
                 ),
+                onPressed: () {
+                  setState(() => isFavorite = !isFavorite);
+                },
               ),
             ],
           ),
-
-          // Imagen clickeable
           Expanded(
             child: InkWell(
               onTap: () {
@@ -160,56 +141,52 @@ class _ProductCardState extends State<ProductCard> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        height: 140,
-                        width: 140,
-                        decoration: const BoxDecoration(
-                          color: Colors.yellow,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      Image.network(
+                  Container(
+                    height: 140,
+                    width: 140,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      shape: BoxShape.circle,
+                    ),
+                    child: ClipOval(
+                      child: Image.network(
                         p.urlImagen ?? '',
-                        height: 160,
-                        width: 140,
-                        fit: BoxFit.contain,
+                        fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
                             const Icon(Icons.image_not_supported, size: 60),
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
           ),
-
-          // Info del producto
-          Column(
-            children: [
-              Container(
-                width: double.infinity,
-                color: Colors.brown.shade100,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  p.nombreCategoria ?? 'Sin categoría',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  p.nombre ?? '',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: Text(
-                        p.nombreCategoria ?? 'Sin categoría',
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: Colors.brown,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
                     Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           '\$${p.precio?.toStringAsFixed(2) ?? '0.00'}',
@@ -222,7 +199,7 @@ class _ProductCardState extends State<ProductCard> {
                           Text(
                             '\$${precioAnterior!.toStringAsFixed(2)}',
                             style: const TextStyle(
-                              fontSize: 10,
+                              fontSize: 12,
                               decoration: TextDecoration.lineThrough,
                               color: Colors.grey,
                             ),
@@ -230,112 +207,119 @@ class _ProductCardState extends State<ProductCard> {
                       ],
                     ),
                     if (p.tieneEnvio)
-                      const Padding(
-                        padding: EdgeInsets.only(left: 8.0),
-                        child: Icon(
-                          Icons.local_shipping_outlined,
-                          size: 18,
-                          color: Colors.black54,
-                        ),
+                      const Icon(
+                        Icons.local_shipping,
+                        size: 20,
+                        color: Colors.green,
                       ),
                   ],
                 ),
-              ),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFEC7521),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: const RoundedRectangleBorder(),
-                  ),
-                  onPressed: () async {
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (_) => const FullScreenLoader(),
-                    );
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: () async {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (_) => const FullScreenLoader(),
+                      );
 
-                    final isLoggedIn = await verificarSesionActiva();
-                    if (!isLoggedIn) {
+                      final isLoggedIn = await verificarSesionActiva();
+                      if (!isLoggedIn) {
+                        Navigator.of(context).pop();
+                        showFeedbackDialog(
+                          context: context,
+                          title: 'Acceso requerido',
+                          message: 'Por favor inicia sesión para continuar.',
+                          isSuccess: false,
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Cancelar'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => LoginPage()),
+                                );
+                              },
+                              child: const Text('Iniciar sesión'),
+                            ),
+                          ],
+                        );
+                        return;
+                      }
+
+                      final cartVM =
+                          Provider.of<CartViewModel>(context, listen: false);
+                      final result = await cartVM.agregarProductoDirecto(
+                          productoId: p.idProducto);
+
                       Navigator.of(context).pop();
+
+                      String title, message;
+                      bool isSuccess;
+
+                      switch (result) {
+                        case AgregadoResultado.yaExiste:
+                          title = 'Ya agregado';
+                          message =
+                              'Este producto ya se encuentra en tu carrito.';
+                          isSuccess = false;
+                          break;
+                        case AgregadoResultado.sinStock:
+                          title = 'Sin stock';
+                          message =
+                              'Este producto está agotado actualmente.';
+                          isSuccess = false;
+                          break;
+                        case AgregadoResultado.error:
+                          title = 'Error';
+                          message =
+                              'No se pudo agregar el producto. Intenta de nuevo.';
+                          isSuccess = false;
+                          break;
+                        default:
+                          title = 'Producto agregado';
+                          message =
+                              'El producto se ha añadido a tu carrito correctamente.';
+                          isSuccess = true;
+                      }
+
                       showFeedbackDialog(
                         context: context,
-                        title: 'Inicia sesión',
-                        message: 'Debes iniciar sesión para agregar productos al carrito.',
-                        isSuccess: false,
+                        title: title,
+                        message: message,
+                        isSuccess: isSuccess,
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('Cancelar'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => LoginPage()),
-                              );
-                            },
-                            child: const Text('Inicia aquí', style: TextStyle(color: Colors.blue)),
+                            child: const Text('Aceptar'),
                           ),
                         ],
                       );
-                      return;
-                    }
-
-                    final cartVM = Provider.of<CartViewModel>(context, listen: false);
-                    final result = await cartVM.agregarProductoDirecto(productoId: p.idProducto);
-
-                    Navigator.of(context).pop();
-
-                    String title, message;
-                    bool isSuccess;
-
-                    switch (result) {
-                      case AgregadoResultado.yaExiste:
-                        title = 'Producto ya en carrito';
-                        message = 'Este producto ya fue agregado previamente.';
-                        isSuccess = false;
-                        break;
-                      case AgregadoResultado.sinStock:
-                        title = 'Sin stock';
-                        message = 'Este producto no tiene stock disponible.';
-                        isSuccess = false;
-                        break;
-                      case AgregadoResultado.error:
-                        title = 'Error';
-                        message = 'Ocurrió un error al agregar el producto.';
-                        isSuccess = false;
-                        break;
-                      default:
-                        title = '¡Agregado!';
-                        message = 'El producto fue agregado a tu carrito.';
-                        isSuccess = true;
-                    }
-
-                    showFeedbackDialog(
-                      context: context,
-                      title: title,
-                      message: message,
-                      isSuccess: isSuccess,
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    );
-                  },
-                  child: const Text(
-                    'Agregar al carrito',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    },
+                    child: const Text(
+                      'Agregar al carrito',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
-                ),
-              ),
-            ],
-          )
+                )
+              ],
+            ),
+          ),
         ],
       ),
     );

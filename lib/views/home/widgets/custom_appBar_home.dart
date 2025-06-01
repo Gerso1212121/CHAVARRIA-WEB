@@ -416,6 +416,7 @@ class _UniversalTopBarState extends State<UniversalTopBar> {
     );
   }
 
+
   Widget _buildDesktopSearch() {
     return Row(
       children: [

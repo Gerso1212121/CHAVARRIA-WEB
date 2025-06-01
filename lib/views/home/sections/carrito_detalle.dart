@@ -16,7 +16,7 @@ class CartPage extends StatelessWidget {
 
     return UniversalTopBarWrapper(
       allProducts: productos,
-      expandedHeight: 200,
+      expandedHeight: 20,
       appBarColor: const Color(0xFF333333),
       flexibleSpace: const SizedBox.shrink(),
       child: Consumer<CartViewModel>(
@@ -72,7 +72,7 @@ class CartPage extends StatelessWidget {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: cartItems.map<Widget>((item) {
-                      return _buildCartItem(item, cartViewModel);
+                      return _buildCartItem(context, item, cartViewModel);
                     }).toList(),
                   ),
           ),
@@ -92,8 +92,8 @@ class CartPage extends StatelessWidget {
       padding: const EdgeInsets.all(6),
       child: Column(
         children: [
-          ...cartItems
-              .map<Widget>((item) => _buildCartItem(item, cartViewModel)),
+          ...cartItems.map<Widget>(
+              (item) => _buildCartItem(context, item, cartViewModel)),
           const SizedBox(height: 24),
           _buildResumen(context, cartViewModel),
         ],
@@ -101,81 +101,80 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCartItem(dynamic item, CartViewModel cartViewModel) {
+  Widget _buildCartItem(
+      BuildContext context, dynamic item, CartViewModel cartViewModel) {
     return StatefulBuilder(
       builder: (context, setState) {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Row(
             children: [
-              Container(
-                width: 70,
-                height: 70,
-                margin: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFDFCE5),
-                  borderRadius: BorderRadius.circular(8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  item.imagenUrl,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      const Icon(Icons.image_not_supported, size: 40),
                 ),
-                child: item.imagenUrl.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          item.imagenUrl,
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : const Icon(Icons.image, color: Colors.grey),
               ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(item.nombre,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text('Precio: \$${item.precio.toStringAsFixed(2)}'),
-                    Text(
-                        'Subtotal: \$${(item.precio * item.cantidad).toStringAsFixed(2)}'),
-                    const SizedBox(height: 4),
-                    Text('Stock disponible: ${item.stock}',
-                        style: const TextStyle(fontSize: 11)),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
                     const SizedBox(height: 6),
+                    Text("Precio: \$${item.precio.toStringAsFixed(2)}"),
+                    Text(
+                        "Subtotal: \$${(item.precio * item.cantidad).toStringAsFixed(2)}"),
+                    if (item.stock < 5)
+                      Text("\u00a1Solo ${item.stock} disponibles!",
+                          style: const TextStyle(
+                              color: Colors.redAccent, fontSize: 12)),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove),
+                        _buildCantidadButton(
+                          icon: Icons.remove,
                           onPressed: () async {
                             if (item.cantidad == 1) {
                               final confirmar = await showDialog<bool>(
                                 context: context,
-                                builder: (context) => AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12)),
-                                  title: const Text('¿Eliminar producto?'),
+                                builder: (_) => AlertDialog(
+                                  title: const Text("\u00bfEliminar producto?"),
                                   content: const Text(
-                                      '¿Deseas eliminar este producto del carrito?'),
+                                      "\u00bfDeseas eliminar este producto del carrito?"),
                                   actions: [
                                     TextButton(
-                                      child: const Text('Cancelar'),
                                       onPressed: () =>
                                           Navigator.of(context).pop(false),
+                                      child: const Text("Cancelar"),
                                     ),
                                     ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red),
-                                      child: const Text('Eliminar'),
                                       onPressed: () =>
                                           Navigator.of(context).pop(true),
+                                      child: const Text("Eliminar"),
                                     ),
                                   ],
                                 ),
                               );
-
                               if (confirmar == true) {
                                 await cartViewModel
                                     .eliminarItemDeCarrito(item.id);
@@ -184,14 +183,16 @@ class CartPage extends StatelessWidget {
                               await cartViewModel
                                   .decrementarCantidadItem(item.productoId);
                             }
-
                             setState(() {});
                           },
                         ),
-                        Text('${item.cantidad}',
-                            style: const TextStyle(fontSize: 16)),
-                        IconButton(
-                          icon: const Icon(Icons.add),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text('${item.cantidad}',
+                              style: const TextStyle(fontSize: 16)),
+                        ),
+                        _buildCantidadButton(
+                          icon: Icons.add,
                           onPressed: item.cantidad < item.stock
                               ? () async {
                                   await cartViewModel
@@ -219,51 +220,87 @@ class CartPage extends StatelessWidget {
     );
   }
 
+  Widget _buildCantidadButton(
+      {required IconData icon, required VoidCallback? onPressed}) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color:
+            onPressed != null ? Colors.orange.shade100 : Colors.grey.shade300,
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.orange[800]),
+        onPressed: onPressed,
+        splashRadius: 20,
+      ),
+    );
+  }
+
   Widget _buildResumen(BuildContext context, CartViewModel cartViewModel) {
     final total = cartViewModel.total;
     final cantidad = cartViewModel.cantidad;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(color: Colors.black12),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Detalle del pedido',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          Row(
+            children: const [
+              Icon(Icons.receipt_long_rounded, color: Colors.orange),
+              SizedBox(width: 8),
+              Text(
+                'Resumen de compra',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Text('Subtotal: \$${total}'),
-          const SizedBox(height: 8),
-          Text(
-            'Total: \$${total.toStringAsFixed(2)}',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: const [
+              Text('Productos:', style: TextStyle(fontSize: 15)),
+              // cantidad variable
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Total:',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                '\$${total.toStringAsFixed(2)}',
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
           const Divider(),
-          // AVISOS IMPORTANTES
           const Text(
-            "🚚 El pago del envío se realiza aparte al momento de la entrega.",
-            style: TextStyle(fontSize: 13, color: Colors.redAccent),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            "El costo de envío varía entre \$10 y \$30 según la ubicación.",
+            "🚚 El envío se paga al recibir. Varía entre \$10 y \$30.",
             style: TextStyle(fontSize: 13),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           const Text(
-            "🛠️ El armado del mueble tiene un costo adicional de \$15 a \$20, dependiendo del tipo de mueble.",
+            "🛠️ Armado entre \$15 y \$20. Se coordina al entregar.",
             style: TextStyle(fontSize: 13),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           const Text(
-            "⏰ El tiempo estimado de envío es de 1 mes y medio a 2 meses.",
+            "⏰ Envío estimado: 1.5 - 2 meses.",
             style: TextStyle(fontSize: 13),
           ),
           const Divider(),
@@ -273,7 +310,6 @@ class CartPage extends StatelessWidget {
             child: ElevatedButton.icon(
               onPressed: () {
                 const montoMinimo = 0.10;
-
                 if (total < montoMinimo) {
                   showDialog(
                     context: context,
@@ -282,7 +318,7 @@ class CartPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12)),
                       title: const Text('Monto insuficiente'),
                       content: Text(
-                          'El total del carrito debe ser mayor a \$${montoMinimo.toStringAsFixed(2)} para continuar con la compra.'),
+                          'El total debe ser mayor a \$${montoMinimo.toStringAsFixed(2)} para continuar.'),
                       actions: [
                         TextButton(
                           child: const Text('Aceptar'),
@@ -297,19 +333,28 @@ class CartPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) =>
-                        MetodoPagoPage(total: total, cantidad: cantidad),
+                    builder: (_) => MetodoPagoPage(
+                      total: total,
+                      cantidad: cantidad,
+                    ),
                   ),
                 );
               },
-              icon: const Icon(Icons.shopping_cart_checkout),
-              label: const Text("Comprar"),
+              icon:
+                  const Icon(Icons.shopping_cart_checkout, color: Colors.white),
+              label: const Text(
+                "Finalizar compra",
+                style: TextStyle(
+                  color: Colors.white, // 👈 Texto blanco
+                  fontWeight: FontWeight.bold, // 👈 Negrita
+                  fontSize: 16,
+                ),
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
+                backgroundColor: Colors.orange[700],
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
+                    borderRadius: BorderRadius.circular(10)),
               ),
             ),
           ),
