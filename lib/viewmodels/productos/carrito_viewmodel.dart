@@ -68,9 +68,9 @@ class CartViewModel extends ChangeNotifier {
     }
 
     final response = await supabase.from('carrito_items').select('''
-      id,
-      producto:producto_id(id_producto,nombre,url_imagen,precio,stock)
-    ''').eq('carrito_id', carritoId);
+  id,
+  producto!carrito_items_producto_id_fkey(id_producto,nombre,url_imagen,precio,stock)
+''').eq('carrito_id', carritoId);
 
     final data = response as List;
 
