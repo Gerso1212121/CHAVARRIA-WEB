@@ -61,8 +61,18 @@ class _UniversalTopBarWrapperState extends State<UniversalTopBarWrapper>
     }
     super.didChangeMetrics();
   }
+void _buscar(String texto) {
+  final query = texto.trim();
+  if (query.isEmpty) return;
 
-  void _buscar(String texto) {
+  Navigator.pushNamed(
+    context,
+    '/productos',
+    arguments: query,
+  );
+}
+
+  void _buscarLocal(String texto) {
     if (texto.trim().isEmpty) {
       setState(() => _resultados = []);
     } else {
@@ -108,8 +118,8 @@ class _UniversalTopBarWrapperState extends State<UniversalTopBarWrapper>
                 expandedHeight: widget.expandedHeight,
                 allProducts: widget.allProducts,
                 searchController: _searchController,
-                onSearchChanged: widget.onSearchChanged ?? _buscar,
-                onSearchSubmitted: widget.onSearchSubmitted ?? _buscar,
+                onSearchChanged: _buscarLocal,
+                onSearchSubmitted: _buscar,
                 searchResults: _resultados,
                 searchKey: _wrapperSearchKey,
                 flexibleSpace: widget.flexibleSpace,

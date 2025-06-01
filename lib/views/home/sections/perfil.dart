@@ -1,12 +1,14 @@
 import 'package:final_project/data/models/productos.dart';
 import 'package:final_project/data/services/auth_service.dart';
 import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
-import 'package:final_project/viewmodels/servicios/viewmodel_pedidos.dart';
+import 'package:final_project/views/home/widgets/historialpedidos.dart';
+import 'package:final_project/views/home/widgets/popup2.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:final_project/views/auth/vista_login.dart';
 import 'package:final_project/views/home/widgets/custom_appBar_home.dart';
+import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
 
 class PerfilUsuarioPage extends StatefulWidget {
   const PerfilUsuarioPage({super.key});
@@ -20,14 +22,27 @@ class _PerfilUsuarioPageState extends State<PerfilUsuarioPage> {
   bool sinSesion = false;
   String currentSection = 'Perfil';
 
-  final List<Producto> productosVacios = [];
-  final TextEditingController buscadorController = TextEditingController();
+  late SearchPopupController searchPopup;
   final supabaseService = SupabaseService();
 
   @override
   void initState() {
     super.initState();
     cargarDatosUsuario();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final productos = context.watch<ProductViewModel>().todosLosProductos;
+    searchPopup =
+        SearchPopupController(context: context, allProducts: productos);
+  }
+
+  @override
+  void dispose() {
+    searchPopup.dispose();
+    super.dispose();
   }
 
   Future<void> cargarDatosUsuario() async {
@@ -53,13 +68,17 @@ class _PerfilUsuarioPageState extends State<PerfilUsuarioPage> {
 
   @override
   Widget build(BuildContext context) {
+    final productos = context.watch<ProductViewModel>().todosLosProductos;
+
     final universalTopBar = UniversalTopBar(
       useSliver: false,
       appBarColor: const Color.fromARGB(255, 50, 50, 50),
-      allProducts: productosVacios,
-      searchController: buscadorController,
-      onSearchChanged: (_) {},
-      searchResults: const [],
+      allProducts: productos,
+      searchController: searchPopup.controller,
+      onSearchChanged: searchPopup.onSearchChanged,
+      onSearchSubmitted: searchPopup.onSearchSubmitted,
+      searchResults: searchPopup.results,
+      searchKey: searchPopup.searchKey,
     );
 
     if (sinSesion) {
@@ -109,63 +128,76 @@ class _PerfilUsuarioPageState extends State<PerfilUsuarioPage> {
     return Scaffold(
       drawer: UniversalTopBar.buildDrawer(context),
       endDrawer: UniversalTopBar.buildCartDrawer(context),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(72),
-        child: universalTopBar,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isDesktop = constraints.maxWidth >= 768;
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              SizedBox(
+                height: 72,
+                child: universalTopBar,
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isDesktop = constraints.maxWidth >= 768;
 
-            if (isDesktop) {
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSidebar(),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: _buildMainContent(),
-                    ),
+                      if (isDesktop) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSidebar(),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(24),
+                                child: _buildMainContent(),
+                              ),
+                            ),
+                          ],
+                        );
+                      } else {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildMainContent(),
+                            const SizedBox(height: 30),
+                            ElevatedButton.icon(
+                              onPressed: () =>
+                                  setState(() => currentSection = 'Perfil'),
+                              icon: const Icon(Icons.person),
+                              label: const Text("Perfil"),
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange),
+                            ),
+                            const SizedBox(height: 12),
+                            ElevatedButton.icon(
+                              onPressed: () =>
+                                  setState(() => currentSection = 'Pedidos'),
+                              icon: const Icon(Icons.list_alt),
+                              label: const Text("Pedidos"),
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange),
+                            ),
+                            const SizedBox(height: 12),
+                            ElevatedButton.icon(
+                              onPressed: () => _cerrarSesion(context),
+                              icon: const Icon(Icons.logout),
+                              label: const Text("Cerrar sesión"),
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red.shade700),
+                            ),
+                          ],
+                        );
+                      }
+                    },
                   ),
-                ],
-              );
-            } else {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildMainContent(),
-                  const SizedBox(height: 30),
-                  ElevatedButton.icon(
-                    onPressed: () => setState(() => currentSection = 'Perfil'),
-                    icon: const Icon(Icons.person),
-                    label: const Text("Perfil"),
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: () => setState(() => currentSection = 'Pedidos'),
-                    icon: const Icon(Icons.list_alt),
-                    label: const Text("Pedidos"),
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: () => _cerrarSesion(context),
-                    icon: const Icon(Icons.logout),
-                    label: const Text("Cerrar sesión"),
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade700),
-                  ),
-                ],
-              );
-            }
-          },
-        ),
+                ),
+              ),
+            ],
+          ),
+          searchPopup.buildPopup(),
+        ],
       ),
     );
   }

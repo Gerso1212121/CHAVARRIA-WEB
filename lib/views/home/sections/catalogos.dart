@@ -19,6 +19,7 @@ class _ProductosState extends State<Productos> {
   String? ordenPrecio;
   final TextEditingController _searchController = TextEditingController();
   final GlobalKey _searchKey = GlobalKey();
+  String? _queryInicial;
 
   final List<String> categorias = [
     'Todos',
@@ -29,6 +30,21 @@ class _ProductosState extends State<Productos> {
     'Almacenamiento',
     'Exterior',
   ];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args != null && args is String && _queryInicial == null) {
+      _queryInicial = args;
+      _searchController.text = _queryInicial!;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<ProductViewModel>().buscar(_queryInicial!);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -44,7 +60,6 @@ class _ProductosState extends State<Productos> {
 
     List<Producto> productos = vm.productos;
 
-// filtros adicionales (opcional si aún quieres permitir por categoría/orden)
     if (categoriaSeleccionada != null && categoriaSeleccionada != 'Todos') {
       productos = productos
           .where((p) =>
@@ -70,14 +85,12 @@ class _ProductosState extends State<Productos> {
           appBarColor: const Color(0xFF333333),
           allProducts: vm.todosLosProductos,
           searchController: _searchController,
-          onSearchSubmitted: (text) async {
+          onSearchSubmitted: (text) {
             final query = text.trim();
             if (query.isEmpty) {
-              await vm.loadProducts(); // o vm.cargarProductos();
-              setState(() {});
+              vm.limpiarBusqueda();
             } else {
               vm.buscar(query);
-              setState(() {});
             }
           },
           searchResults: vm.productos,
@@ -112,7 +125,7 @@ class _ProductosState extends State<Productos> {
                     ),
             ),
             const SizedBox(height: 32),
-            const AppFooter(), // Footer dentro del scroll
+            const AppFooter(),
           ],
         ),
       ),
@@ -251,7 +264,6 @@ class _ProductosState extends State<Productos> {
                                   return;
                                 }
 
-                                // ⏳ Mostrar pantalla de carga
                                 showDialog(
                                   context: context,
                                   barrierDismissible: false,
@@ -284,10 +296,8 @@ class _ProductosState extends State<Productos> {
                                   cantidad: 1,
                                 );
 
-                                Navigator.of(context)
-                                    .pop(); // ❌ Cierra el diálogo de carga
+                                Navigator.of(context).pop();
 
-                                // ✅ Mostrar resultado
                                 String titulo;
                                 String mensaje;
                                 Icon icono;

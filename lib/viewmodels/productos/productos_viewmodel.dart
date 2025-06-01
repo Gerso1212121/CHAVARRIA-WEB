@@ -12,8 +12,9 @@ class ProductViewModel extends ChangeNotifier {
   List<Producto> get productos => _visibles;
   List<Producto> get todosLosProductos => _todos;
 
-  List<Producto> get productosSinOferta =>
-      _visibles.where((p) => p.porcentajeDescuento == 0 && p.stock > 0).toList();
+  List<Producto> get productosSinOferta => _visibles
+      .where((p) => p.porcentajeDescuento == 0 && p.stock > 0)
+      .toList();
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -108,9 +109,11 @@ class ProductViewModel extends ChangeNotifier {
 
     if (ordenPrecio != null) {
       if (ordenPrecio == 'asc') {
-        productosFiltrados.sort((a, b) => (a.precio ?? 0).compareTo(b.precio ?? 0));
+        productosFiltrados
+            .sort((a, b) => (a.precio ?? 0).compareTo(b.precio ?? 0));
       } else if (ordenPrecio == 'desc') {
-        productosFiltrados.sort((a, b) => (b.precio ?? 0).compareTo(a.precio ?? 0));
+        productosFiltrados
+            .sort((a, b) => (b.precio ?? 0).compareTo(a.precio ?? 0));
       }
     }
 
@@ -118,5 +121,9 @@ class ProductViewModel extends ChangeNotifier {
 
     return productosFiltrados.take(cantidad).toList();
   }
-  
+
+  void limpiarBusqueda() {
+    _visibles = [..._todos];
+    notifyListeners();
+  }
 }

@@ -22,7 +22,8 @@ class PopupResultadosBusqueda extends StatelessWidget {
         final double popupWidth = maxWidth > 600 ? 600 : maxWidth * 3;
 
         return Material(
-          elevation: 0,
+          elevation: 8, // << Elevación visible
+          shadowColor: Colors.black45,
           borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(12),
             bottomRight: Radius.circular(12),
@@ -38,13 +39,7 @@ class PopupResultadosBusqueda extends StatelessWidget {
                 bottomLeft: Radius.circular(12),
                 bottomRight: Radius.circular(12),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                ),
-              ],
+              // Shadow ya está en Material, así que podrías omitir esto
             ),
             child: noResultados
                 ? const Center(
@@ -69,7 +64,8 @@ class PopupResultadosBusqueda extends StatelessWidget {
                     itemBuilder: (_, i) {
                       final p = resultados[i];
                       return ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 12),
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: Image.network(
