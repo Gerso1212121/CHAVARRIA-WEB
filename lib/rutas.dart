@@ -13,7 +13,6 @@ final Map<String, WidgetBuilder> appRoutes = {
   '/terminos': (context) => const TermsAndConditionsPage(),
   '/pago-completo': (context) => const PagoCompletoPage(),
   '/login': (context) => const LoginPage(), 
-
   '/verificacion-pago': (context) => const VerificacionPagoPage(),
 // ✅ Aquí agregás la ruta del login
 };

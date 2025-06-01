@@ -1,3 +1,5 @@
+import 'dart:ui_web';
+
 import 'package:final_project/rutas.dart';
 import 'package:final_project/supabase.dart';
 import 'package:flutter/material.dart';
@@ -6,12 +8,15 @@ import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
 import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
 import 'package:final_project/data/services/products_service.dart';
 import 'package:final_project/repositories/productos_usuario.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart'; // 👈 Asegura esto arriba
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  setUrlStrategy(const HashUrlStrategy()); // 👈 Agrega esto ANTES de runApp
   await initializeSupabase();
   runApp(const MyAppProviders());
 }
+
 
 class MyAppProviders extends StatelessWidget {
   const MyAppProviders({super.key});
@@ -44,7 +49,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Mi App',
+      title: 'Carpinteria Chavarria',
       routes: appRoutes,
     );
   }
