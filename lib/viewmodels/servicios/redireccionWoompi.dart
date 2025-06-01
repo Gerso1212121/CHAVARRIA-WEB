@@ -5,8 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Función principal para lanzar el pago, ahora requiere el BuildContext
-Future<void> lanzarPagoDesdeFlutter(
-    BuildContext context, double total) async {
+Future<void> lanzarPagoDesdeFlutter(BuildContext context, double total) async {
   // Validar monto máximo permitido ($1000)
   if (total > 1000.0) {
     showDialog(
@@ -65,6 +64,7 @@ Future<void> lanzarPagoDesdeFlutter(
         'referencia': referencia,
         'montoCents': montoCents,
         'nombreProducto': "Compra desde Flutter",
+        'clienteId': user.id, // 👈 Esto es clave
       }),
     );
 

@@ -31,7 +31,7 @@ class _VerificacionPagoPageState extends State<VerificacionPagoPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('https://tu-backend.com/api/pagos/$referencia'),
+        Uri.parse('https://chavarria-web-1.onrender.com/api/pagos/$referencia'),
       );
 
       if (response.statusCode == 200) {
