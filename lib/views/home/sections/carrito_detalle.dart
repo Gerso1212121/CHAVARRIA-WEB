@@ -272,7 +272,7 @@ class CartPage extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
-                const montoMinimo = 0.2;
+                const montoMinimo = 0.10;
 
                 if (total < montoMinimo) {
                   showDialog(
