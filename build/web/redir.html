@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirigiendo...</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        text-align: center;
+        margin-top: 10%;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Redirigiendo al estado del pago...</h2>
+    <p>Un momento por favor.</p>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const referencia =
+        params.get("referencia") || params.get("identificadorEnlaceComercio");
+
+      if (referencia) {
+        // Redirige a la ruta hash que Flutter entiende
+        window.location.href = `/#/verificacion-pago?referencia=${referencia}`;
+      } else {
+        // Si no hay referencia, te lleva al inicio
+        window.location.href = "/";
+      }
+    </script>
+  </body>
+</html>
