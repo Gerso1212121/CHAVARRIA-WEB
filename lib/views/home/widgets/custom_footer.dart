@@ -20,7 +20,7 @@ class AppFooter extends StatelessWidget {
             builder: (context, constraints) {
               return Flex(
                 direction: isMobile ? Axis.vertical : Axis.horizontal,
-                mainAxisSize: MainAxisSize.min, // <--- para evitar altura infinita
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -29,34 +29,43 @@ class AppFooter extends StatelessWidget {
                     child: _buildLogoAndSocial(),
                   ),
                   const SizedBox(width: 40),
-                  Flexible(
-                    fit: FlexFit.loose,
-                    child: Wrap(
+                  if (!isMobile)
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _buildColumn("Información para clientes", [
+                            "Términos y condiciones",
+                            "Soporte al cliente",
+                            "Promociones",
+                          ]),
+                          const SizedBox(width: 48),
+                          _buildColumn("Gestión de la cuenta", [
+                            "Mi perfil",
+                            "Historial de pedidos",
+                            "Cerrar sesión",
+                          ]),
+                        ],
+                      ),
+                    )
+                  else
+                    Wrap(
                       spacing: 48,
                       runSpacing: 24,
                       alignment: WrapAlignment.end,
                       children: [
                         _buildColumn("Información para clientes", [
                           "Términos y condiciones",
-                          "Política de privacidad",
                           "Soporte al cliente",
-                          "Guía de compra"
+                          "Promociones",
                         ]),
                         _buildColumn("Gestión de la cuenta", [
                           "Mi perfil",
                           "Historial de pedidos",
-                          "Cambiar contraseña",
-                          "Cerrar sesión"
-                        ]),
-                        _buildColumn("Sitios de interés", [
-                          "Blog",
-                          "Proyectos destacados",
-                          "Testimonios",
-                          "Galería de trabajos"
+                          "Cerrar sesión",
                         ]),
                       ],
                     ),
-                  ),
                 ],
               );
             },
