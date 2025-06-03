@@ -63,19 +63,13 @@ class UniversalTopBar extends StatefulWidget {
             ListTile(
               title: const Text('Inicio'),
               leading: const Icon(Icons.home, color: marronOscuro),
-              onTap: () => Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => const HomePage())),
+              onTap: () => Navigator.pushNamed(context, '/'),
             ),
             ListTile(
               title: const Text('Productos'),
               leading: const Icon(Icons.view_list, color: marronOscuro),
               onTap: () => Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const Productos())),
-            ),
-            ListTile(
-              title: const Text('Ofertas'),
-              leading: const Icon(Icons.local_offer, color: naranja),
-              onTap: () {},
             ),
             ListTile(
               title: Text(isAutenticado ? 'Cerrar sesión' : 'Iniciar sesión'),
@@ -415,7 +409,6 @@ class _UniversalTopBarState extends State<UniversalTopBar> {
       ],
     );
   }
-
 
   Widget _buildDesktopSearch() {
     return Row(

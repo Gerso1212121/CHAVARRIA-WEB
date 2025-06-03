@@ -269,9 +269,14 @@ class CartPage extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text('Productos:', style: TextStyle(fontSize: 15)),
-              // cantidad variable
+            children: [
+              const Text('Cantidad:',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                '${cantidad}',
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 6),

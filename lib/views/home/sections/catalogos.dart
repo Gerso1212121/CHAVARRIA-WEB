@@ -97,37 +97,42 @@ class _ProductosState extends State<Productos> {
           searchKey: _searchKey,
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 16),
-            _buildFiltros(),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: productos.isEmpty
-                  ? const Center(child: Text('No hay productos disponibles.'))
-                  : GridView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount: productos.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: isMobile ? 2 : 4,
-                        crossAxisSpacing: 30,
-                        mainAxisSpacing: 30,
-                        childAspectRatio: 0.9,
-                      ),
-                      itemBuilder: (context, index) {
+      body: CustomScrollView(
+        slivers: [
+          // Espacio arriba
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          // Filtros
+          SliverToBoxAdapter(child: _buildFiltros()),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          // Grid de productos o mensaje vacío
+          productos.isEmpty
+              ? const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: Text('No hay productos disponibles.')),
+                )
+              : SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverGrid(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
                         final producto = productos[index];
                         return _buildProductoCard(context, producto);
                       },
+                      childCount: productos.length,
                     ),
-            ),
-            const SizedBox(height: 32),
-            const AppFooter(),
-          ],
-        ),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: isMobile ? 2 : 4,
+                      crossAxisSpacing: 30,
+                      mainAxisSpacing: 30,
+                      childAspectRatio: 0.9,
+                    ),
+                  ),
+                ),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          // Footer (ahora también scrollea)
+          const SliverToBoxAdapter(child: AppFooter()),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+        ],
       ),
     );
   }
@@ -176,82 +181,182 @@ class _ProductosState extends State<Productos> {
   }
 
   Widget _buildProductoCard(BuildContext context, Producto producto) {
-    return Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 4,
-                offset: Offset(0, 2),
+    final tieneDescuento = producto.porcentajeDescuento > 0;
+    final precioActual = producto.precio ?? 0.0;
+    final precioOriginal = producto.precio ?? 0.0;
+    final precioConDescuento = tieneDescuento
+        ? precioOriginal * (1 - producto.porcentajeDescuento / 100)
+        : precioOriginal;
+
+    final isAgotado = producto.stock == 0;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 180;
+
+        return Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 6,
+                    offset: Offset(0, 3),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
-                ),
-                child: (producto.urlImagen ?? '').isNotEmpty
-                    ? Image.network(
-                        producto.urlImagen!,
-                        height: 200,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.broken_image, size: 80),
-                      )
-                    : const Icon(Icons.image, size: 120),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      producto.nombre,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (tieneDescuento)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: const BoxDecoration(
+                        color: Colors.orange,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          bottomRight: Radius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        '-${producto.porcentajeDescuento.toInt()}% OFF',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: isCompact ? 10 : 12,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    Text('\$${(producto.precio ?? 0.0).toStringAsFixed(2)}'),
-                    const SizedBox(height: 8),
-                    producto.stock > 0
-                        ? SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () async {
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/productoDetalle',
+                        arguments: producto,
+                      );
+                    },
+                    child: Hero(
+                      tag: 'producto_${producto.idProducto}',
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(16),
+                        ),
+                        child: Image.network(
+                          producto.urlImagen ?? '',
+                          height: isCompact ? 110 : 140,
+                          width: double.infinity,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) =>
+                              const Icon(Icons.broken_image, size: 60),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (producto.nombreCategoria != null)
+                          Text(
+                            producto.nombreCategoria!,
+                            style: TextStyle(
+                              fontSize: isCompact ? 11 : 13,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        const SizedBox(height: 2),
+                        Text(
+                          producto.nombre,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: isCompact ? 13 : 14,
+                            color: isAgotado ? Colors.grey : Colors.black,
+                            decoration: isAgotado
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  '\$${precioConDescuento.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: isCompact ? 13 : 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: isAgotado
+                                        ? Colors.grey
+                                        : Colors.green[700],
+                                  ),
+                                ),
+                                if (tieneDescuento)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 6),
+                                    child: Text(
+                                      '\$${precioOriginal.toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                        fontSize: isCompact ? 11 : 13,
+                                        color: Colors.grey,
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            if (producto.tieneEnvio)
+                              const Icon(Icons.local_shipping,
+                                  size: 18, color: Colors.green),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: isAgotado
+                            ? null
+                            : () async {
                                 final supabase = Supabase.instance.client;
                                 final user = supabase.auth.currentUser;
 
                                 if (user == null) {
                                   showDialog(
                                     context: context,
-                                    builder: (context) => AlertDialog(
+                                    builder: (_) => AlertDialog(
                                       shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(16)),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
                                       title: const Text('¡Ups!'),
                                       content: const Text(
                                           'Debes iniciar sesión para agregar productos al carrito.'),
                                       actions: [
                                         TextButton(
-                                          child: const Text('Cancelar'),
                                           onPressed: () =>
                                               Navigator.of(context).pop(),
+                                          child: const Text('Cancelar'),
                                         ),
                                         ElevatedButton.icon(
-                                          icon: const Icon(Icons.login),
-                                          label: const Text('Iniciar sesión'),
                                           style: ElevatedButton.styleFrom(
                                               backgroundColor: Colors.orange),
+                                          icon: const Icon(Icons.login),
+                                          label: const Text('Iniciar sesión'),
                                           onPressed: () {
                                             Navigator.of(context).pop();
                                             Navigator.pushNamed(
@@ -334,7 +439,7 @@ class _ProductosState extends State<Productos> {
 
                                 showDialog(
                                   context: context,
-                                  builder: (context) => AlertDialog(
+                                  builder: (_) => AlertDialog(
                                     shape: RoundedRectangleBorder(
                                         borderRadius:
                                             BorderRadius.circular(16)),
@@ -354,51 +459,49 @@ class _ProductosState extends State<Productos> {
                                   ),
                                 );
                               },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.orange,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 8),
-                              ),
-                              child: const Text('Agregar al carrito'),
-                            ),
-                          )
-                        : const Text(
-                            'AGOTADO',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        icon: const Icon(Icons.add_shopping_cart),
+                        label: Text(isAgotado ? 'Agotado' : 'Agregar'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          textStyle: TextStyle(fontSize: isCompact ? 13 : 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (producto.stock == 0)
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(12),
-                  bottomLeft: Radius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'AGOTADO',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-      ],
+            if (producto.stock == 0)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(16),
+                      bottomLeft: Radius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'AGOTADO',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

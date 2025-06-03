@@ -1,3 +1,4 @@
+import 'package:final_project/data/models/productos.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:final_project/data/models/carrito.dart';
@@ -109,19 +110,7 @@ class CartViewModel extends ChangeNotifier {
     final carritoId = await _getOrCreateCarritoId(user.id);
     if (carritoId == null) return AgregadoResultado.error;
 
-    final producto = await supabase
-        .from('producto')
-        .select('id_producto,nombre,stock,precio,url_imagen')
-        .eq('id_producto', productoId)
-        .maybeSingle();
-
-    if (producto == null || (producto['stock'] ?? 0) <= 0) {
-      return AgregadoResultado.sinStock;
-    }
-
-    final stockDisponible = producto['stock'] as int;
-    if (cantidad > stockDisponible) return AgregadoResultado.sinStock;
-
+    // 1. Verificar si ya está en el carrito
     final itemExistente = await supabase
         .from('carrito_items')
         .select('id, cantidad')
@@ -129,9 +118,25 @@ class CartViewModel extends ChangeNotifier {
         .eq('producto_id', productoId)
         .maybeSingle();
 
+    // 2. Obtener datos del producto
+    final producto = await supabase
+        .from('producto')
+        .select('id_producto,nombre,stock,precio,url_imagen')
+        .eq('id_producto', productoId)
+        .maybeSingle();
+
+    if (producto == null) return AgregadoResultado.error;
+    final stockDisponible = producto['stock'] as int? ?? 0;
+
     if (itemExistente != null) {
-      final nuevaCantidad = (itemExistente['cantidad'] as int) + cantidad;
-      if (nuevaCantidad > stockDisponible) return AgregadoResultado.sinStock;
+      final cantidadActual = itemExistente['cantidad'] as int;
+      final disponibleRestante = stockDisponible - cantidadActual;
+
+      if (cantidad > disponibleRestante) {
+        return AgregadoResultado.sinStock;
+      }
+
+      final nuevaCantidad = cantidadActual + cantidad;
 
       await supabase
           .from('carrito_items')
@@ -141,10 +146,16 @@ class CartViewModel extends ChangeNotifier {
       if (index != -1) {
         _items[index] = _items[index].copyWith(cantidad: nuevaCantidad);
       }
+
       notifyListeners();
       return AgregadoResultado.yaExiste;
     }
 
+    if (stockDisponible <= 0 || cantidad > stockDisponible) {
+      return AgregadoResultado.sinStock;
+    }
+
+    // 3. Insertar nuevo
     final inserted = await supabase
         .from('carrito_items')
         .insert({
@@ -162,8 +173,9 @@ class CartViewModel extends ChangeNotifier {
       cantidad: cantidad,
       precio: (producto['precio'] as num).toDouble(),
       imagenUrl: producto['url_imagen'] ?? "",
-      stock: producto['stock'] ?? 0,
+      stock: stockDisponible,
     ));
+
     notifyListeners();
     return AgregadoResultado.agregadoNuevo;
   }
@@ -251,4 +263,42 @@ class CartViewModel extends ChangeNotifier {
   }
 
   decrementarItemCantidad(int idProducto) {}
+
+  AgregadoResultado agregarLocalmenteConValidacion({
+    required Producto producto,
+    int cantidadAgregar = 1,
+  }) {
+    final index = _items.indexWhere((i) => i.productoId == producto.idProducto);
+
+    if (index != -1) {
+      final item = _items[index];
+      final nuevaCantidad = item.cantidad + cantidadAgregar;
+
+      if (nuevaCantidad > item.stock) {
+        return AgregadoResultado.sinStock;
+      }
+
+      _items[index] = item.copyWith(cantidad: nuevaCantidad);
+      notifyListeners();
+      return AgregadoResultado.yaExiste;
+    }
+
+    if (cantidadAgregar > producto.stock) {
+      return AgregadoResultado.sinStock;
+    }
+
+    _items.add(
+      CartItem(
+        id: producto.idProducto,
+        productoId: producto.idProducto,
+        nombre: producto.nombre,
+        cantidad: cantidadAgregar,
+        precio: producto.precio ?? 0,
+        imagenUrl: producto.urlImagen ?? '',
+        stock: producto.stock,
+      ),
+    );
+    notifyListeners();
+    return AgregadoResultado.agregadoNuevo;
+  }
 }

@@ -8,12 +8,13 @@ import 'package:final_project/views/home/widgets/animations/carrusel_imagenes.da
 class DestacadosYCategorias extends StatelessWidget {
   const DestacadosYCategorias({super.key});
 
-  int _getCrossAxisCount(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    if (width < 600) return 2;
-    if (width < 1024) return 3;
-    return 4;
-  }
+int _getCrossAxisCount(BuildContext context) {
+  final width = MediaQuery.of(context).size.width;
+  if (width < 600) return 1; // <-- Solo 1 columna en móviles
+  if (width < 1024) return 3;
+  return 4;
+}
+
 
   @override
   Widget build(BuildContext context) {

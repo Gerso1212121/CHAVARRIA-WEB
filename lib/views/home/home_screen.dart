@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:final_project/main.dart';
 import 'package:final_project/views/home/sections/info_producto.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,15 +7,52 @@ import 'package:final_project/data/models/productos.dart';
 import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
 import 'package:final_project/views/home/widgets/custom_carrusel.dart';
 import 'package:final_project/views/home/widgets/custom_footer.dart';
-import 'package:final_project/views/home/widgets/custom_categorias.dart';
+import 'package:final_project/views/home/widgets/custom_enviarCategorias.dart';
 import 'package:final_project/views/home/widgets/custom_APPBARUNIVERSAL.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> with RouteAware {
+  @override
+  void initState() {
+    super.initState();
+
+    // Limpiar búsqueda al iniciar Home
+    Future.microtask(() {
+      context.read<ProductViewModel>().limpiarBusqueda();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  @override
+  void didPopNext() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<ProductViewModel>().limpiarBusqueda();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final productos = context.watch<ProductViewModel>().todosLosProductos;
+    final productos = context.watch<ProductViewModel>().productos;
     final isSmall = MediaQuery.of(context).size.width < 600;
 
     return UniversalTopBarWrapper(
@@ -66,6 +104,13 @@ class HomePage extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () =>
                           Navigator.pushNamed(context, '/productos'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                      ),
                       child: const Text('Ver Productos'),
                     ),
                   ),

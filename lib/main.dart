@@ -10,13 +10,14 @@ import 'package:final_project/data/services/products_service.dart';
 import 'package:final_project/repositories/productos_usuario.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart'; // 👈 Asegura esto arriba
 
+final RouteObserver<ModalRoute<void>> routeObserver =
+    RouteObserver<ModalRoute<void>>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   setUrlStrategy(const HashUrlStrategy()); // 👈 Agrega esto ANTES de runApp
   await initializeSupabase();
   runApp(const MyAppProviders());
 }
-
 
 class MyAppProviders extends StatelessWidget {
   const MyAppProviders({super.key});
@@ -51,6 +52,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Carpinteria Chavarria',
       routes: appRoutes,
+      navigatorObservers: [routeObserver],
+      onGenerateRoute: onGenerateRoute,
     );
   }
 }
