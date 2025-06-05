@@ -15,10 +15,12 @@ class CartViewModel extends ChangeNotifier {
   List<CartItem> get items => _items;
 
   bool cargadoInicial = false;
+  double get subtotal => _items.fold(0, (sum, item) => sum + item.total);
 
-  double get total => _items.fold(0, (sum, item) => sum + item.total);
+  // Ajusta esta lógica según impuestos, envío, descuentos, etc
+  double get total => subtotal; // o => subtotal * 1.13;
+
   int get cantidad => _items.fold(0, (acc, item) => acc + item.cantidad);
-
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -129,25 +131,6 @@ class CartViewModel extends ChangeNotifier {
     final stockDisponible = producto['stock'] as int? ?? 0;
 
     if (itemExistente != null) {
-      final cantidadActual = itemExistente['cantidad'] as int;
-      final disponibleRestante = stockDisponible - cantidadActual;
-
-      if (cantidad > disponibleRestante) {
-        return AgregadoResultado.sinStock;
-      }
-
-      final nuevaCantidad = cantidadActual + cantidad;
-
-      await supabase
-          .from('carrito_items')
-          .update({'cantidad': nuevaCantidad}).eq('id', itemExistente['id']);
-
-      final index = _items.indexWhere((i) => i.productoId == productoId);
-      if (index != -1) {
-        _items[index] = _items[index].copyWith(cantidad: nuevaCantidad);
-      }
-
-      notifyListeners();
       return AgregadoResultado.yaExiste;
     }
 

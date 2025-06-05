@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:final_project/main.dart';
-import 'package:final_project/views/home/sections/info_producto.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:final_project/data/models/productos.dart';
@@ -18,6 +17,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with RouteAware {
+  bool _ready = false;
+  final TextEditingController _searchController =
+      TextEditingController(); // ✅ Declarado aquí
+
   @override
   void initState() {
     super.initState();
@@ -25,6 +28,13 @@ class _HomePageState extends State<HomePage> with RouteAware {
     // Limpiar búsqueda al iniciar Home
     Future.microtask(() {
       context.read<ProductViewModel>().limpiarBusqueda();
+    });
+
+    // Esperar un frame antes de mostrar contenido pesado
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() => _ready = true);
+      }
     });
   }
 
@@ -37,10 +47,10 @@ class _HomePageState extends State<HomePage> with RouteAware {
   @override
   void dispose() {
     routeObserver.unsubscribe(this);
+    _searchController.dispose(); // ✅ Siempre libera recursos
     super.dispose();
   }
 
-  @override
   @override
   void didPopNext() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -69,12 +79,11 @@ class _HomePageState extends State<HomePage> with RouteAware {
                 'assets/images/home2.png',
                 'assets/images/home3.png',
                 'assets/images/home4.png',
-                'assets/images/home5.png',
               ],
             ),
             Positioned.fill(
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
                 child: Container(color: Colors.black.withOpacity(0.3)),
               ),
             ),
@@ -102,8 +111,14 @@ class _HomePageState extends State<HomePage> with RouteAware {
                     alignment:
                         isSmall ? Alignment.center : Alignment.centerLeft,
                     child: ElevatedButton(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, '/productos'),
+                      onPressed: () {
+                        final textoBuscado = _searchController.text.trim();
+                        Navigator.pushNamed(
+                          context,
+                          '/productos',
+                          arguments: textoBuscado,
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,
@@ -129,11 +144,12 @@ class _HomePageState extends State<HomePage> with RouteAware {
           ],
         ),
       ),
+      searchController: _searchController, // ✅ Aquí lo pasás al wrapper
       onSearchChanged: null,
       child: Column(
-        children: const [
-          DestacadosYCategorias(),
-          AppFooter(),
+        children: [
+          if (_ready) const DestacadosYCategorias(),
+          if (_ready) const AppFooter(),
         ],
       ),
     );

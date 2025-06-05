@@ -149,64 +149,130 @@ class UniversalTopBar extends StatefulWidget {
                         ? const Center(
                             child: Text('No tienes nada agregado aún.'))
                         : ListView.builder(
+                            padding: const EdgeInsets.all(12),
                             itemCount: cartItems.length,
                             itemBuilder: (context, index) {
                               final item = cartItems[index];
-                              return ListTile(
-                                leading: item.imagenUrl.isNotEmpty
-                                    ? Image.network(item.imagenUrl,
-                                        width: 50, height: 50)
-                                    : const Icon(Icons.image),
-                                title: Text(item.nombre),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Stock disponible: ${item.stock}',
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                  ],
+                              return Card(
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.red),
-                                  onPressed: () => cartViewModel
-                                      .eliminarItemDeCarrito(item.id),
+                                elevation: 3,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Row(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: item.imagenUrl.isNotEmpty
+                                            ? Image.network(
+                                                item.imagenUrl,
+                                                width: 60,
+                                                height: 60,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, __, ___) =>
+                                                    const Icon(Icons
+                                                        .image_not_supported),
+                                              )
+                                            : const Icon(Icons.image, size: 60),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              item.nombre,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Stock: ${item.stock}',
+                                              style:
+                                                  const TextStyle(fontSize: 13),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline,
+                                            color: Colors.red),
+                                        onPressed: () => cartViewModel
+                                            .eliminarItemDeCarrito(item.id),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               );
                             },
                           ),
               ),
-              ListTile(
-                tileColor: Colors.orange.shade100,
-                title: Text(
-                  'Total: \$${cartViewModel.total.toStringAsFixed(2)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.attach_money, color: Colors.green),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Total: \$${cartViewModel.total.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (cartItems.isNotEmpty)
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.shopping_bag_outlined),
+                        label: const Text('Finalizar compra'),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const CartPage()),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade600,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      )
+                    else
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.store),
+                        label: const Text('Ir a comprar'),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const Productos()),
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          side: const BorderSide(color: Colors.blue),
+                        ),
+                      ),
+                  ],
                 ),
-                leading: const Icon(Icons.attach_money, color: Colors.green),
               ),
-              if (cartItems.isNotEmpty)
-                ListTile(
-                  tileColor: Colors.green.shade100,
-                  title: const Text(
-                    'Finalizar compra',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  leading: const Icon(Icons.shopping_bag, color: Colors.green),
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const CartPage())),
-                )
-              else
-                ListTile(
-                  tileColor: Colors.blue.shade100,
-                  title: const Text(
-                    'Ir a comprar',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  leading: const Icon(Icons.store, color: Colors.blue),
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const Productos())),
-                ),
             ],
           );
         },
@@ -262,12 +328,61 @@ class _UniversalTopBarState extends State<UniversalTopBar> {
         : [
             IconButton(
               icon: const Icon(Icons.favorite_border, color: Colors.white),
-              onPressed: () {},
+              tooltip: 'Ver favoritos',
+              onPressed: () {
+                Navigator.pushNamed(context, '/favoritos');
+              },
             ),
-            IconButton(
-              icon:
-                  const Icon(Icons.shopping_cart_outlined, color: Colors.white),
-              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            Consumer<CartViewModel>(
+              builder: (context, cartVM, _) {
+                // ✅ Cargar al iniciar si aún no se ha hecho
+                if (!cartVM.isLoading && cartVM.items.isEmpty) {
+                  cartVM.loadItemsFromSupabase();
+                }
+
+                final count = cartVM.items.length;
+                final showBadge = count > 0;
+
+                return Stack(
+                  clipBehavior: Clip.none, // para que el badge no se recorte
+                  alignment: Alignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.shopping_cart_outlined,
+                          color: Colors.white),
+                      onPressed: () => Scaffold.of(context).openEndDrawer(),
+                    ),
+                    if (showBadge)
+                      Positioned(
+                        top: -4,
+                        right: -4,
+                        child: IgnorePointer(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 18,
+                              minHeight: 18,
+                            ),
+                            child: Text(
+                              count > 6 ? '6+' : '$count',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
             IconButton(
               icon: const Icon(Icons.person_outline, color: Colors.white),

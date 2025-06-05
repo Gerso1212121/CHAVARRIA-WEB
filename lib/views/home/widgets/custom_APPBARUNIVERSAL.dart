@@ -13,6 +13,7 @@ class UniversalTopBarWrapper extends StatefulWidget {
   final Widget flexibleSpace;
   final void Function(String)? onSearchSubmitted;
   final void Function(String)? onSearchChanged;
+  final TextEditingController? searchController; // ✅ NUEVO
 
   const UniversalTopBarWrapper({
     super.key,
@@ -23,6 +24,7 @@ class UniversalTopBarWrapper extends StatefulWidget {
     required this.flexibleSpace,
     this.onSearchSubmitted,
     this.onSearchChanged,
+    this.searchController, // ✅ NUEVO
   });
 
   @override
@@ -31,7 +33,7 @@ class UniversalTopBarWrapper extends StatefulWidget {
 
 class _UniversalTopBarWrapperState extends State<UniversalTopBarWrapper>
     with WidgetsBindingObserver {
-  final TextEditingController _searchController = TextEditingController();
+  late final TextEditingController _searchController; // ✅ ahora late
   final GlobalKey _wrapperSearchKey = GlobalKey();
   List<Producto> _resultados = [];
 
@@ -43,12 +45,20 @@ class _UniversalTopBarWrapperState extends State<UniversalTopBarWrapper>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // ✅ Si se pasó controlador externo, úsalo; si no, crea uno
+    _searchController = widget.searchController ?? TextEditingController();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _searchController.dispose();
+
+    // ✅ Solo lo eliminamos si lo creamos internamente
+    if (widget.searchController == null) {
+      _searchController.dispose();
+    }
+
     super.dispose();
   }
 
@@ -61,16 +71,17 @@ class _UniversalTopBarWrapperState extends State<UniversalTopBarWrapper>
     }
     super.didChangeMetrics();
   }
-void _buscar(String texto) {
-  final query = texto.trim();
-  if (query.isEmpty) return;
 
-  Navigator.pushNamed(
-    context,
-    '/productos',
-    arguments: query,
-  );
-}
+  void _buscar(String texto) {
+    final query = texto.trim();
+    if (query.isEmpty) return;
+
+    Navigator.pushNamed(
+      context,
+      '/productos',
+      arguments: query,
+    );
+  }
 
   void _buscarLocal(String texto) {
     if (texto.trim().isEmpty) {

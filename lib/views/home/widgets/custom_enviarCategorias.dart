@@ -216,7 +216,7 @@ class BeneficioItem extends StatelessWidget {
 }
 
 class CategoriaItem extends StatelessWidget {
-  final IconData icon;
+  final IconData icon; 
   final String label;
 
   const CategoriaItem({super.key, required this.icon, required this.label});

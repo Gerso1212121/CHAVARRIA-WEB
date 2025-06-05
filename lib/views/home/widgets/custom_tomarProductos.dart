@@ -1,69 +1,14 @@
 import 'package:final_project/repositories/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
-import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
 import 'package:final_project/data/models/productos.dart';
-import 'package:final_project/views/auth/vista_login.dart';
 import 'package:final_project/views/home/sections/info_producto.dart';
 import 'package:final_project/views/home/widgets/animations/custom_chargin.dart';
 import 'package:final_project/views/home/widgets/custom_showdialog.dart';
-
-@override
-Widget build(BuildContext context) {
-  final productosVM = Provider.of<ProductViewModel>(context);
-
-  if (productosVM.isLoading) {
-    return const Center(child: FullScreenLoader());
-  }
-
-  final screenWidth = MediaQuery.of(context).size.width;
-  final isMobile = screenWidth < 600;
-  final productosParaMostrar =
-      productosVM.obtenerProductosParaVista(isMobile: isMobile);
-
-  if (productosParaMostrar.isEmpty) {
-    return const Center(child: Text("No hay productos disponibles."));
-  }
-
-  if (isMobile) {
-    // Modo lista vertical en móviles
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: productosParaMostrar.length,
-      itemBuilder: (context, index) {
-        final producto = productosParaMostrar[index];
-        return SizedBox(
-          height: MediaQuery.of(context).size.height * 0.85, // Altura fija
-          child: ProductCard(producto: producto),
-        );
-      },
-    );
-  } else {
-    // Modo grilla en pantallas grandes
-    int calcularColumnas(double width) {
-      if (width < 900) return 3;
-      return 4;
-    }
-
-    final crossAxisCount = calcularColumnas(screenWidth);
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: productosParaMostrar.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.65,
-      ),
-      itemBuilder: (context, index) {
-        final producto = productosParaMostrar[index];
-        return ProductCard(producto: producto);
-      },
-    );
-  }
-}
+import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
+import 'package:final_project/viewmodels/servicios/favoritos.dart';
+import 'package:final_project/views/auth/vista_login.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProductCard extends StatefulWidget {
   final Producto producto;
@@ -76,6 +21,30 @@ class ProductCard extends StatefulWidget {
 
 class _ProductCardState extends State<ProductCard> {
   bool isFavorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    verificarFavorito();
+  }
+
+  Future<void> verificarFavorito() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    final result = await Supabase.instance.client
+        .from('favoritos')
+        .select('id_producto')
+        .eq('id_cliente', user.id)
+        .eq('id_producto', widget.producto.idProducto)
+        .maybeSingle();
+
+    if (result != null) {
+      setState(() {
+        isFavorite = true;
+      });
+    }
+  }
 
   double get precioConDescuento {
     final p = widget.producto;
@@ -114,8 +83,7 @@ class _ProductCardState extends State<ProductCard> {
               children: [
                 if (p.porcentajeDescuento > 0 && p.stock > 0)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.deepOrange,
                       borderRadius: BorderRadius.circular(6),
@@ -134,8 +102,22 @@ class _ProductCardState extends State<ProductCard> {
                     isFavorite ? Icons.favorite : Icons.favorite_border,
                     color: isFavorite ? Colors.red : Colors.grey,
                   ),
-                  onPressed: () {
-                    setState(() => isFavorite = !isFavorite);
+                  onPressed: () async {
+                    final user = Supabase.instance.client.auth.currentUser;
+                    if (user == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text(
+                                'Debes iniciar sesión para agregar a favoritos')),
+                      );
+                      return;
+                    }
+
+                    await toggleFavorito(user.id, p.idProducto);
+
+                    setState(() {
+                      isFavorite = !isFavorite;
+                    });
                   },
                 ),
               ],
@@ -143,9 +125,7 @@ class _ProductCardState extends State<ProductCard> {
           ),
 
           // Imagen
-// Imagen
           Flexible(
-            flex: 1,
             child: InkWell(
               onTap: () {
                 Navigator.push(
@@ -177,7 +157,7 @@ class _ProductCardState extends State<ProductCard> {
             ),
           ),
 
-          // Info
+          // Información
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Column(
@@ -232,7 +212,7 @@ class _ProductCardState extends State<ProductCard> {
             ),
           ),
 
-          // Botón
+          // Botón "Agregar al carrito"
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -300,8 +280,7 @@ class _ProductCardState extends State<ProductCard> {
                     break;
                   case AgregadoResultado.error:
                     title = 'Error';
-                    message =
-                        'No se pudo agregar el producto. Intenta de nuevo.';
+                    message = 'No se pudo agregar el producto. Intenta de nuevo.';
                     isSuccess = false;
                     break;
                   default:

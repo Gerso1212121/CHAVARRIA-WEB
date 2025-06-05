@@ -1,3 +1,5 @@
+import 'package:final_project/views/home/sections/favoritos.dart';
+import 'package:final_project/views/home/sections/perfil.dart';
 import 'package:flutter/material.dart';
 import 'package:final_project/data/models/productos.dart';
 import 'package:final_project/views/auth/vista_login.dart';
@@ -16,7 +18,9 @@ final Map<String, WidgetBuilder> appRoutes = {
   '/pago-completo': (context) => const PagoCompletoPage(),
   '/login': (context) => const LoginPage(),
   '/verificacion-pago': (context) => const VerificacionPagoPage(),
-  // 🚫 Eliminamos '/productoDetalle' de aquí porque requiere argumentos dinámicos
+  '/favoritos': (context) => const FavoritosPage(),
+  '/perfil': (context) => PerfilUsuarioPage(),
+  '/historial': (context) => PerfilUsuarioPage(),
 };
 
 Route<dynamic>? onGenerateRoute(RouteSettings settings) {

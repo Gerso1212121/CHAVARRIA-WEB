@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AppFooter extends StatelessWidget {
@@ -34,16 +35,24 @@ class AppFooter extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          _buildColumn("Información para clientes", [
-                            "Términos y condiciones",
-                            "Soporte al cliente",
-                            "Promociones",
+                          _buildColumn(context, "Información para clientes", [
+                            {
+                              "label": "Términos y condiciones",
+                              "route": "/terminos"
+                            },
+                            {
+                              "label": "Soporte al cliente",
+                              "route": "/soporte"
+                            },
+                            {"label": "Promociones", "route": "/promociones"},
                           ]),
-                          const SizedBox(width: 48),
-                          _buildColumn("Gestión de la cuenta", [
-                            "Mi perfil",
-                            "Historial de pedidos",
-                            "Cerrar sesión",
+                          _buildColumn(context, "Gestión de la cuenta", [
+                            {"label": "Mi perfil", "route": "/perfil"},
+                            {
+                              "label": "Historial de pedidos",
+                              "route": "/historial"
+                            },
+                            {"label": "Cerrar sesión", "route": "/logout"},
                           ]),
                         ],
                       ),
@@ -54,15 +63,21 @@ class AppFooter extends StatelessWidget {
                       runSpacing: 24,
                       alignment: WrapAlignment.end,
                       children: [
-                        _buildColumn("Información para clientes", [
-                          "Términos y condiciones",
-                          "Soporte al cliente",
-                          "Promociones",
+                        _buildColumn(context, "Información para clientes", [
+                          {
+                            "label": "Términos y condiciones",
+                            "route": "/terminos"
+                          },
+                          {"label": "Soporte al cliente", "route": "/soporte"},
+                          {"label": "Promociones", "route": "/promociones"},
                         ]),
-                        _buildColumn("Gestión de la cuenta", [
-                          "Mi perfil",
-                          "Historial de pedidos",
-                          "Cerrar sesión",
+                        _buildColumn(context, "Gestión de la cuenta", [
+                          {"label": "Mi perfil", "route": "/perfil"},
+                          {
+                            "label": "Historial de pedidos",
+                            "route": "/historial"
+                          },
+                          {"label": "Cerrar sesión", "route": "/logout"},
                         ]),
                       ],
                     ),
@@ -136,15 +151,18 @@ class AppFooter extends StatelessWidget {
         Row(
           children: [
             IconButton(
-              icon: const Icon(FontAwesomeIcons.facebook, color: Colors.orange, size: 18),
+              icon: const Icon(FontAwesomeIcons.facebook,
+                  color: Colors.orange, size: 18),
               onPressed: () => _launchURL('https://facebook.com'),
             ),
             IconButton(
-              icon: const Icon(FontAwesomeIcons.instagram, color: Colors.orange, size: 18),
+              icon: const Icon(FontAwesomeIcons.instagram,
+                  color: Colors.orange, size: 18),
               onPressed: () => _launchURL('https://instagram.com'),
             ),
             IconButton(
-              icon: const Icon(FontAwesomeIcons.whatsapp, color: Colors.orange, size: 18),
+              icon: const Icon(FontAwesomeIcons.whatsapp,
+                  color: Colors.orange, size: 18),
               onPressed: () => _launchURL('https://wa.me/50322304976'),
             ),
           ],
@@ -153,19 +171,66 @@ class AppFooter extends StatelessWidget {
     );
   }
 
-  Widget _buildColumn(String title, List<String> items) {
+  Widget _buildColumn(
+      BuildContext context, String title, List<Map<String, String>> items) {
     return SizedBox(
       width: 180,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Text(title,
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           ...items.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(item, style: const TextStyle(color: Colors.white70)),
-            ),
+            (item) {
+              final label = item["label"]!;
+              final route = item["route"]!;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: InkWell(
+                  onTap: () async {
+                    if (route == "/logout") {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          title: const Text("¿Cerrar sesión?"),
+                          content: const Text(
+                              "¿Estás seguro de que quieres cerrar sesión?"),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text("Cancelar"),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange),
+                              child: const Text("Cerrar sesión"),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true) {
+                        await Supabase.instance.client.auth.signOut();
+                        if (!context.mounted) return;
+                        Navigator.pushNamedAndRemoveUntil(
+                            context, '/login', (route) => false);
+                      }
+                    } else {
+                      Navigator.pushNamed(context, route);
+                    }
+                  },
+                  child: Text(
+                    label,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -188,7 +253,8 @@ class AppFooter extends StatelessWidget {
         ? const SizedBox(height: 12)
         : const SizedBox(
             height: 40,
-            child: VerticalDivider(color: Color.fromARGB(155, 255, 255, 255), thickness: 1),
+            child: VerticalDivider(
+                color: Color.fromARGB(155, 255, 255, 255), thickness: 1),
           );
   }
 

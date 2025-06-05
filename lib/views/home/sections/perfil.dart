@@ -1,6 +1,7 @@
 import 'package:final_project/data/models/productos.dart';
 import 'package:final_project/data/services/auth_service.dart';
 import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
+import 'package:final_project/views/home/widgets/custom_historialEnvios.dart';
 import 'package:final_project/views/home/widgets/historialpedidos.dart';
 import 'package:final_project/views/home/widgets/popup2.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ class _PerfilUsuarioPageState extends State<PerfilUsuarioPage> {
   Map<String, dynamic>? usuario;
   bool sinSesion = false;
   String currentSection = 'Perfil';
+  bool mostrarEnvios = false;
 
   late SearchPopupController searchPopup;
   final supabaseService = SupabaseService();
@@ -107,10 +109,7 @@ class _PerfilUsuarioPageState extends State<PerfilUsuarioPage> {
                 label: const Text('Ir a Iniciar Sesión'),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
                 onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const LoginPage()),
-                  );
+                  Navigator.pushReplacementNamed(context, '/');
                 },
               ),
             ],
@@ -141,51 +140,156 @@ class _PerfilUsuarioPageState extends State<PerfilUsuarioPage> {
                   padding: const EdgeInsets.all(16),
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final isDesktop = constraints.maxWidth >= 768;
+                      final isWideScreen = constraints.maxWidth >= 800;
 
-                      if (isDesktop) {
+                      final perfilCard = Container(
+                        width: isWideScreen
+                            ? constraints.maxWidth * 0.3
+                            : double.infinity,
+                        margin: const EdgeInsets.only(right: 16, bottom: 16),
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 👇 BOTÓN NUEVO PARA VOLVER AL INICIO
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton.icon(
+                                onPressed: () {
+                                  Navigator.pushNamedAndRemoveUntil(
+                                      context, '/', (route) => false);
+                                },
+                                icon: const Icon(Icons.home,
+                                    color: Colors.orange),
+                                label: const Text(
+                                  'Volver al inicio',
+                                  style: TextStyle(
+                                    color: Colors.orange,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+
+                            const Text('👤 Perfil del Cliente',
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF333333))),
+                            const SizedBox(height: 20),
+                            _buildInfoRow(Icons.person, 'Nombre',
+                                usuario!['nombre'] ?? 'No disponible'),
+                            _buildInfoRow(Icons.email, 'Correo',
+                                usuario!['correo'] ?? 'No disponible'),
+                            _buildInfoRow(Icons.credit_card, 'DUI',
+                                _ocultarDui(usuario!['dui'] ?? '')),
+                            _buildInfoRow(Icons.location_on, 'Dirección',
+                                usuario!['direccion'] ?? 'No registrada'),
+                            _buildInfoRow(Icons.phone, 'Teléfono 1',
+                                usuario!['telefono'] ?? 'No disponible'),
+                            _buildInfoRow(
+                                Icons.phone_android,
+                                'Teléfono 2',
+                                usuario!['telefono_secundario'] ??
+                                    'No registrado'),
+                            _buildInfoRow(
+                                Icons.calendar_month,
+                                'Fecha de Registro',
+                                _formatearFecha(usuario!['created_at'] ?? '')),
+                          ],
+                        ),
+                      );
+
+                      final pedidosEnviosCard = Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              )
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    mostrarEnvios
+                                        ? '🚚 Historial de Envíos'
+                                        : '📦 Historial de Pedidos',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF333333),
+                                    ),
+                                  ),
+                                  TextButton.icon(
+                                    onPressed: () {
+                                      setState(() {
+                                        mostrarEnvios = !mostrarEnvios;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      mostrarEnvios
+                                          ? Icons.list
+                                          : Icons.local_shipping,
+                                      color: Colors.orange,
+                                    ),
+                                    label: Text(
+                                      mostrarEnvios
+                                          ? 'Ver pedidos'
+                                          : 'Ver envíos',
+                                      style:
+                                          const TextStyle(color: Colors.orange),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              mostrarEnvios
+                                  ? HistorialEnvios(usuario!['id_cliente'])
+                                  : HistorialPedidos(usuario!['id_cliente']),
+                            ],
+                          ),
+                        ),
+                      );
+
+                      if (isWideScreen) {
                         return Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildSidebar(),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.all(24),
-                                child: _buildMainContent(),
-                              ),
-                            ),
+                            perfilCard,
+                            pedidosEnviosCard,
                           ],
                         );
                       } else {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            _buildMainContent(),
-                            const SizedBox(height: 30),
-                            ElevatedButton.icon(
-                              onPressed: () =>
-                                  setState(() => currentSection = 'Perfil'),
-                              icon: const Icon(Icons.person),
-                              label: const Text("Perfil"),
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orange),
-                            ),
-                            const SizedBox(height: 12),
-                            ElevatedButton.icon(
-                              onPressed: () =>
-                                  setState(() => currentSection = 'Pedidos'),
-                              icon: const Icon(Icons.list_alt),
-                              label: const Text("Pedidos"),
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orange),
-                            ),
-                            const SizedBox(height: 12),
-                            ElevatedButton.icon(
-                              onPressed: () => _cerrarSesion(context),
-                              icon: const Icon(Icons.logout),
-                              label: const Text("Cerrar sesión"),
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red.shade700),
+                            perfilCard,
+                            Container(
+                              margin: const EdgeInsets.only(top: 16),
+                              child: pedidosEnviosCard.child,
                             ),
                           ],
                         );
@@ -200,185 +304,6 @@ class _PerfilUsuarioPageState extends State<PerfilUsuarioPage> {
         ],
       ),
     );
-  }
-
-  Widget _buildSidebar() {
-    return Container(
-      width: 240,
-      color: const Color(0xFFF4F4F4),
-      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const CircleAvatar(radius: 30),
-          const SizedBox(height: 10),
-          const Text('Hola!',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 20),
-          _sidebarItem('Perfil', selected: currentSection == 'Perfil'),
-          _sidebarItem('Pedidos', selected: currentSection == 'Pedidos'),
-          const Divider(),
-          _sidebarItem('Salir', isExit: true),
-        ],
-      ),
-    );
-  }
-
-  Widget _sidebarItem(String title,
-      {bool selected = false, bool isExit = false}) {
-    return InkWell(
-      onTap: () async {
-        if (isExit) {
-          await _cerrarSesion(context);
-        } else {
-          setState(() => currentSection = title);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: selected
-            ? const BoxDecoration(
-                border: Border(left: BorderSide(color: Colors.red, width: 3)))
-            : null,
-        child: Text(
-          title,
-          style: TextStyle(
-            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-            color: selected ? Colors.black : Colors.grey.shade700,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _cerrarSesion(BuildContext context) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar'),
-        content: const Text('¿Deseas cerrar sesión?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Cerrar sesión'),
-          ),
-        ],
-      ),
-    );
-    if (confirm == true) {
-      final cartVM = context.read<CartViewModel>();
-      cartVM.onCerrarSesion = () {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginPage()),
-          (route) => false,
-        );
-      };
-      await cartVM.cerrarSesion();
-    }
-  }
-
-  Widget _buildMainContent() {
-    if (currentSection == 'Perfil') {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.arrow_back, color: Colors.orange),
-                tooltip: 'Volver',
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                '👤 Mi Perfil',
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF333333),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                )
-              ],
-            ),
-            child: Column(
-              children: [
-                _buildInfoRow(Icons.person, 'Nombre',
-                    usuario!['nombre'] ?? 'No disponible'),
-                _buildInfoRow(Icons.email, 'Correo',
-                    usuario!['correo'] ?? 'No disponible'),
-                _buildInfoRow(Icons.credit_card, 'DUI',
-                    _ocultarDui(usuario!['dui'] ?? '')),
-                _buildInfoRow(Icons.location_on, 'Dirección',
-                    usuario!['direccion'] ?? 'No registrada'),
-                _buildInfoRow(Icons.phone, 'Teléfono 1',
-                    usuario!['telefono'] ?? 'No disponible'),
-                _buildInfoRow(Icons.phone_android, 'Teléfono 2',
-                    usuario!['telefono_secundario'] ?? 'No registrado'),
-                _buildInfoRow(Icons.calendar_month, 'Fecha de Registro',
-                    _formatearFecha(usuario!['created_at'] ?? '')),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEF5350),
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 3,
-              ),
-              onPressed: () {},
-              icon: const Icon(Icons.edit),
-              label: const Text('Editar Información'),
-            ),
-          )
-        ],
-      );
-    } else {
-      return Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              )
-            ],
-          ),
-          child: HistorialPedidos(usuario!['id_cliente']),
-        ),
-      );
-    }
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {

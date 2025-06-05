@@ -16,219 +16,191 @@ class ProductDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final productos = context.watch<ProductViewModel>().todosLosProductos;
+    final isWide = MediaQuery.of(context).size.width > 700;
 
     return UniversalTopBarWrapper(
       allProducts: productos,
       expandedHeight: 0,
       appBarColor: const Color.fromARGB(255, 51, 51, 51),
       flexibleSpace: const SizedBox.shrink(),
-      child: Consumer<CartViewModel>(
-        builder: (context, cartVM, _) {
-          final isWide = MediaQuery.of(context).size.width > 700;
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.arrow_back, color: Colors.deepOrange),
-                  label: const Text(
-                    'Regresar',
-                    style: TextStyle(
-                      color: Colors.deepOrange,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back, color: Colors.deepOrange),
+              label: const Text(
+                'Regresar',
+                style: TextStyle(
+                  color: Colors.deepOrange,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: 16),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    return isWide
-                        ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    producto.urlImagen ?? '',
-                                    height: 300,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(child: _buildDetails(context)),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  producto.urlImagen ?? '',
-                                  height: 250,
-                                  fit: isWide ? BoxFit.contain : BoxFit.cover,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              _buildDetails(context),
-                            ],
-                          );
-                  },
-                ),
-                const SizedBox(height: 24),
-                const AppFooter(),
-              ],
+              ),
             ),
-          );
-        },
+            const SizedBox(height: 16),
+            isWide
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            producto.urlImagen ?? '',
+                            height: 400,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(child: ProductDetailsCard(producto: producto)),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          producto.urlImagen ?? '',
+                          height: 250,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ProductDetailsCard(producto: producto),
+                    ],
+                  ),
+            const SizedBox(height: 24),
+            const AppFooter(),
+          ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildDetails(BuildContext context) {
-    final double precioConDescuento =
-        (producto.porcentajeDescuento > 0 && producto.precio != null)
-            ? producto.precio! * (1 - producto.porcentajeDescuento / 100)
-            : producto.precio ?? 0.0;
+class ProductDetailsCard extends StatefulWidget {
+  final Producto producto;
 
+  const ProductDetailsCard({super.key, required this.producto});
+
+  @override
+  State<ProductDetailsCard> createState() => _ProductDetailsCardState();
+}
+
+class _ProductDetailsCardState extends State<ProductDetailsCard> {
+  int contadorLocal = 1;
+  bool isProcessing = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final producto = widget.producto;
     final cartVM = context.watch<CartViewModel>();
+    final double precioConDescuento = (producto.porcentajeDescuento > 0 && producto.precio != null)
+        ? producto.precio! * (1 - producto.porcentajeDescuento / 100)
+        : producto.precio ?? 0.0;
 
-    return StatefulBuilder(
-      builder: (context, setState) {
-        final itemEnCarrito = cartVM.items.firstWhere(
-          (item) => item.productoId == producto.idProducto,
-          orElse: () => CartItem(
-            id: 0,
-            productoId: producto.idProducto,
-            nombre: producto.nombre,
-            cantidad: 0,
-            precio: producto.precio ?? 0,
-            imagenUrl: producto.urlImagen ?? '',
-            stock: producto.stock,
-          ),
-        );
-
-        int cantidadActual = itemEnCarrito.cantidad;
-        int contadorLocal = 1;
-
-        return Card(
-          elevation: 3,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.all(0),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Card(
+      elevation: 5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              producto.nombre,
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Row(
               children: [
-                Text(producto.nombre,
-                    style: const TextStyle(
-                        fontSize: 28, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Text('\$${precioConDescuento.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green)),
-                    if (producto.porcentajeDescuento > 0 &&
-                        producto.precio != null) ...[
-                      const SizedBox(width: 12),
-                      Text('\$${producto.precio!.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                              fontSize: 18,
-                              color: Colors.grey,
-                              decoration: TextDecoration.lineThrough)),
-                    ],
-                  ],
+                Text(
+                  '\$${precioConDescuento.toStringAsFixed(2)}',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green),
                 ),
-                const SizedBox(height: 10),
                 if (producto.porcentajeDescuento > 0)
-                  Chip(
-                    label: Text(
-                      'Descuento: ${producto.porcentajeDescuento}%',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    backgroundColor: Colors.redAccent,
-                  ),
-                const Divider(height: 30),
-                _buildSpecItem('Stock', producto.stock.toString()),
-                _buildSpecItem('Categoría', producto.nombreCategoria),
-                _buildSpecItem('Dimensiones', producto.dimensiones),
-                _buildSpecItem('Peso', '${producto.peso ?? '-'} kg'),
-                _buildSpecItem('Código de barras', producto.codigoBarras),
-                _buildSpecItem(
-                    'Envío gratis', producto.tieneEnvio ? 'Sí' : 'No'),
-                const Divider(height: 30),
-                const Text('Cantidad a agregar',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: contadorLocal > 1
-                          ? () => setState(() => contadorLocal--)
-                          : null,
-                      icon: const Icon(Icons.remove),
-                    ),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: Text(
-                        '$contadorLocal',
-                        key: ValueKey(contadorLocal),
-                        style: const TextStyle(fontSize: 18),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 12),
+                    child: Text(
+                      '\$${producto.precio!.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                        decoration: TextDecoration.lineThrough,
                       ),
                     ),
-                    IconButton(
-                      onPressed:
-                          contadorLocal < (producto.stock - cantidadActual)
-                              ? () => setState(() => contadorLocal++)
-                              : null,
-                      icon: const Icon(Icons.add),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: producto.stock == 0
-                          ? Colors.grey
-                          : Colors.orangeAccent,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: producto.stock == 0
-                        ? null
-                        : () => _handleAddToCart(
-                              context,
-                              cartVM,
-                              contadorLocal,
-                              () => setState(() => contadorLocal = 1),
-                            ),
-                    icon: const Icon(Icons.shopping_cart_outlined),
-                    label: Text(
-                      producto.stock == 0
-                          ? 'Producto agotado'
-                          : 'Agregar $contadorLocal al carrito',
-                      style: const TextStyle(fontSize: 16),
-                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                const Text('Descripción',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Text(producto.descripcion ?? 'Sin descripción disponible.'),
               ],
             ),
-          ),
-        );
-      },
+            if (producto.porcentajeDescuento > 0)
+              const Padding(
+                padding: EdgeInsets.only(top: 6),
+                child: Chip(
+                  label: Text('Descuento', style: TextStyle(color: Colors.white)),
+                  backgroundColor: Colors.redAccent,
+                ),
+              ),
+            const Divider(height: 30, thickness: 1),
+            const Text(
+              'Especificaciones',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            _buildSpecItem('Stock', producto.stock.toString()),
+            _buildSpecItem('Categoría', producto.nombreCategoria),
+            _buildSpecItem('Dimensiones', producto.dimensiones),
+            _buildSpecItem('Peso', '${producto.peso ?? '-'} kg'),
+            _buildSpecItem('Código de barras', producto.codigoBarras),
+            _buildSpecItem('Envío gratis', producto.tieneEnvio ? 'Sí' : 'No'),
+            const Divider(height: 30, thickness: 1),
+
+            /// Botón protegido
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: (producto.stock == 0 || isProcessing)
+                    ? null
+                    : () async {
+                        setState(() => isProcessing = true);
+                        await _handleAddToCart(context, cartVM, producto);
+                        setState(() => isProcessing = false);
+                      },
+                icon: isProcessing
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.add_shopping_cart_rounded),
+                label: Text(
+                  isProcessing
+                      ? 'Procesando...'
+                      : (producto.stock == 0 ? 'Producto agotado' : 'Agregar $contadorLocal al carrito'),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: (producto.stock == 0 || isProcessing) ? Colors.grey : const Color(0xFFFF9800),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 30),
+            const Text(
+              'Descripción',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              producto.descripcion ?? 'Sin descripción disponible.',
+              style: const TextStyle(fontSize: 15),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -245,29 +217,19 @@ class ProductDetailPage extends StatelessWidget {
     );
   }
 
-  Future<void> _handleAddToCart(
-    BuildContext context,
-    CartViewModel cartVM,
-    int cantidad,
-    void Function() setState,
-  ) async {
+  Future<void> _handleAddToCart(BuildContext context, CartViewModel cartVM, Producto producto) async {
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
 
     if (user == null) {
-      showDialog(
+      await showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: const Text('¡Ups!',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          content: const Text(
-              'Debes iniciar sesión para agregar productos al carrito.'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: const Text('¡Ups!', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: const Text('Debes iniciar sesión para agregar productos al carrito.'),
           actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancelar')),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
               onPressed: () {
@@ -285,12 +247,10 @@ class ProductDetailPage extends StatelessWidget {
 
     final resultado = await cartVM.agregarProductoDirecto(
       productoId: producto.idProducto,
-      cantidad: cantidad,
+      cantidad: contadorLocal,
     );
 
-    setState();
-
-    showDialog(
+    await showDialog(
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -337,8 +297,7 @@ class ProductDetailPage extends StatelessWidget {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Aceptar')),
+              onPressed: () => Navigator.pop(context), child: const Text('Aceptar')),
         ],
       ),
     );
