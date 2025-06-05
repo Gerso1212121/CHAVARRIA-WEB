@@ -40,10 +40,6 @@ class AppFooter extends StatelessWidget {
                               "label": "Términos y condiciones",
                               "route": "/terminos"
                             },
-                            {
-                              "label": "Soporte al cliente",
-                              "route": "/soporte"
-                            },
                             {"label": "Promociones", "route": "/promociones"},
                           ]),
                           _buildColumn(context, "Gestión de la cuenta", [
@@ -52,7 +48,6 @@ class AppFooter extends StatelessWidget {
                               "label": "Historial de pedidos",
                               "route": "/historial"
                             },
-                            {"label": "Cerrar sesión", "route": "/logout"},
                           ]),
                         ],
                       ),
@@ -68,7 +63,6 @@ class AppFooter extends StatelessWidget {
                             "label": "Términos y condiciones",
                             "route": "/terminos"
                           },
-                          {"label": "Soporte al cliente", "route": "/soporte"},
                           {"label": "Promociones", "route": "/promociones"},
                         ]),
                         _buildColumn(context, "Gestión de la cuenta", [
@@ -77,7 +71,6 @@ class AppFooter extends StatelessWidget {
                             "label": "Historial de pedidos",
                             "route": "/historial"
                           },
-                          {"label": "Cerrar sesión", "route": "/logout"},
                         ]),
                       ],
                     ),
@@ -203,12 +196,6 @@ class AppFooter extends StatelessWidget {
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
                               child: const Text("Cancelar"),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orange),
-                              child: const Text("Cerrar sesión"),
                             ),
                           ],
                         ),

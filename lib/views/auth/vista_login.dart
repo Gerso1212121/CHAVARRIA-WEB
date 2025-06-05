@@ -29,10 +29,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _homepage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const HomePage()),
-    );
+    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
   }
 
   String? _validateEmail(String? value) {
@@ -75,10 +72,7 @@ class _LoginPageState extends State<LoginPage> {
         context: context,
         usuario: usuario,
         onSuccess: () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
-          );
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         },
       );
     }
@@ -226,22 +220,6 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                   ),
                                 ],
-                              ),
-                              const Divider(height: 30),
-                              const Text("O inicia con:"),
-                              const SizedBox(height: 10),
-                              OutlinedButton.icon(
-                                onPressed: () {},
-                                icon: const Icon(FontAwesomeIcons.google,
-                                    size: 18),
-                                label: const Text("Iniciar con Google"),
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 24, vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
                               ),
                             ],
                           ),

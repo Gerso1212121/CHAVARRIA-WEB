@@ -78,7 +78,8 @@ class ReguisterPageState extends State<ReguisterPage> {
         showFeedbackDialog(
           context: context,
           title: 'Registro exitoso',
-          message: 'Tu cuenta fue creada correctamente. Ahora puedes iniciar sesión.',
+          message:
+              'Tu cuenta fue creada correctamente. Ahora puedes iniciar sesión.',
           isSuccess: true,
           actions: [
             TextButton(
@@ -189,8 +190,7 @@ class ReguisterPageState extends State<ReguisterPage> {
                               label: 'DUI',
                               keyboardType: TextInputType.number,
                               onChanged: (value) {
-                                if (value.length == 8 &&
-                                    !value.contains('-')) {
+                                if (value.length == 8 && !value.contains('-')) {
                                   _duiController.text = '$value-';
                                   _duiController.selection =
                                       TextSelection.fromPosition(
@@ -276,7 +276,9 @@ class ReguisterPageState extends State<ReguisterPage> {
                                     ),
                                   )
                                 : const Icon(Icons.login),
-                            label: Text(_isRegistrando ? "Registrando..." : "Regístrate"),
+                            label: Text(_isRegistrando
+                                ? "Registrando..."
+                                : "Regístrate"),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFEC7521),
                               foregroundColor: Colors.white,
@@ -300,21 +302,6 @@ class ReguisterPageState extends State<ReguisterPage> {
                               ),
                             ),
                           ],
-                        ),
-                        const Divider(),
-                        const Text("O inicia con:"),
-                        const SizedBox(height: 10),
-                        OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(FontAwesomeIcons.google, size: 18),
-                          label: const Text("Regístrate con"),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
                         ),
                       ],
                     ),
