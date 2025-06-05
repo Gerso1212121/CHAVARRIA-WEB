@@ -101,67 +101,73 @@ class CartViewModel extends ChangeNotifier {
     if (inicial) _setLoading(false);
   }
 
-  Future<AgregadoResultado?> agregarProductoDirecto({
-    required int productoId,
-    int cantidad = 1,
-  }) async {
-    final supabase = Supabase.instance.client;
-    final user = supabase.auth.currentUser;
-    if (user == null) return AgregadoResultado.error;
+Future<AgregadoResultado?> agregarProductoDirectoOptimizado({
+  required Producto producto,
+  int cantidad = 1,
+}) async {
+  final supabase = Supabase.instance.client;
+  final user = supabase.auth.currentUser;
+  if (user == null) return AgregadoResultado.error;
 
-    final carritoId = await _getOrCreateCarritoId(user.id);
-    if (carritoId == null) return AgregadoResultado.error;
+  final carritoId = await _getOrCreateCarritoId(user.id);
+  if (carritoId == null) return AgregadoResultado.error;
 
-    // 1. Verificar si ya está en el carrito
-    final itemExistente = await supabase
-        .from('carrito_items')
-        .select('id, cantidad')
-        .eq('carrito_id', carritoId)
-        .eq('producto_id', productoId)
-        .maybeSingle();
+  // ✅ 1. Validación local rápida
+  final index = _items.indexWhere((i) => i.productoId == producto.idProducto);
+  if (index != -1) {
+    // Ya existe
+    return AgregadoResultado.yaExiste;
+  }
 
-    // 2. Obtener datos del producto
-    final producto = await supabase
-        .from('producto')
-        .select('id_producto,nombre,stock,precio,url_imagen')
-        .eq('id_producto', productoId)
-        .maybeSingle();
+  if (producto.stock <= 0 || cantidad > producto.stock) {
+    return AgregadoResultado.sinStock;
+  }
 
-    if (producto == null) return AgregadoResultado.error;
-    final stockDisponible = producto['stock'] as int? ?? 0;
+  // ✅ 2. Agrega localmente primero (optimismo)
+  final tempId = DateTime.now().millisecondsSinceEpoch; // ID temporal
+  final nuevoItem = CartItem(
+    id: tempId,
+    productoId: producto.idProducto,
+    nombre: producto.nombre,
+    cantidad: cantidad,
+    precio: producto.precio ?? 0,
+    imagenUrl: producto.urlImagen ?? '',
+    stock: producto.stock,
+  );
+  _items.add(nuevoItem);
+  notifyListeners();
 
-    if (itemExistente != null) {
-      return AgregadoResultado.yaExiste;
-    }
-
-    if (stockDisponible <= 0 || cantidad > stockDisponible) {
-      return AgregadoResultado.sinStock;
-    }
-
-    // 3. Insertar nuevo
+  // ✅ 3. Insertar en Supabase en segundo plano
+  try {
     final inserted = await supabase
         .from('carrito_items')
         .insert({
           'carrito_id': carritoId,
-          'producto_id': productoId,
+          'producto_id': producto.idProducto,
           'cantidad': cantidad,
         })
         .select('id')
         .maybeSingle();
 
-    _items.add(CartItem(
-      id: inserted?['id'],
-      productoId: producto['id_producto'],
-      nombre: producto['nombre'],
-      cantidad: cantidad,
-      precio: (producto['precio'] as num).toDouble(),
-      imagenUrl: producto['url_imagen'] ?? "",
-      stock: stockDisponible,
-    ));
-
+    // 🔄 Actualizar ID real recibido de Supabase
+    if (inserted != null) {
+      final realId = inserted['id'];
+      final idx = _items.indexWhere((i) => i.id == tempId);
+      if (idx != -1) {
+        _items[idx] = _items[idx].copyWith(id: realId);
+        notifyListeners(); // opcional
+      }
+    }
+  } catch (e) {
+    // ❌ En caso de error, revertimos
+    _items.removeWhere((i) => i.id == tempId);
     notifyListeners();
-    return AgregadoResultado.agregadoNuevo;
+    return AgregadoResultado.error;
   }
+
+  return AgregadoResultado.agregadoNuevo;
+}
+
 
   Future<void> eliminarItemDeCarrito(int itemId) async {
     final supabase = Supabase.instance.client;

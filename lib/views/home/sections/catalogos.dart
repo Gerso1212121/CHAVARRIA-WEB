@@ -456,9 +456,9 @@ class _ProductosState extends State<Productos> {
                                 final cartVM = Provider.of<CartViewModel>(
                                     context,
                                     listen: false);
-                                final resultado =
-                                    await cartVM.agregarProductoDirecto(
-                                  productoId: producto.idProducto,
+                                final resultado = await cartVM
+                                    .agregarProductoDirectoOptimizado(
+                                  producto: producto, // ✅ Este es el correcto
                                   cantidad: 1,
                                 );
 

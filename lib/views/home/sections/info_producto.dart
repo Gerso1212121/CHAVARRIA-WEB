@@ -97,9 +97,10 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
   Widget build(BuildContext context) {
     final producto = widget.producto;
     final cartVM = context.watch<CartViewModel>();
-    final double precioConDescuento = (producto.porcentajeDescuento > 0 && producto.precio != null)
-        ? producto.precio! * (1 - producto.porcentajeDescuento / 100)
-        : producto.precio ?? 0.0;
+    final double precioConDescuento =
+        (producto.porcentajeDescuento > 0 && producto.precio != null)
+            ? producto.precio! * (1 - producto.porcentajeDescuento / 100)
+            : producto.precio ?? 0.0;
 
     return Card(
       elevation: 5,
@@ -118,7 +119,10 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
               children: [
                 Text(
                   '\$${precioConDescuento.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green),
+                  style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green),
                 ),
                 if (producto.porcentajeDescuento > 0)
                   Padding(
@@ -138,7 +142,8 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
               const Padding(
                 padding: EdgeInsets.only(top: 6),
                 child: Chip(
-                  label: Text('Descuento', style: TextStyle(color: Colors.white)),
+                  label:
+                      Text('Descuento', style: TextStyle(color: Colors.white)),
                   backgroundColor: Colors.redAccent,
                 ),
               ),
@@ -171,19 +176,26 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
                       )
                     : const Icon(Icons.add_shopping_cart_rounded),
                 label: Text(
                   isProcessing
                       ? 'Procesando...'
-                      : (producto.stock == 0 ? 'Producto agotado' : 'Agregar $contadorLocal al carrito'),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      : (producto.stock == 0
+                          ? 'Producto agotado'
+                          : 'Agregar $contadorLocal al carrito'),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: (producto.stock == 0 || isProcessing) ? Colors.grey : const Color(0xFFFF9800),
+                  backgroundColor: (producto.stock == 0 || isProcessing)
+                      ? Colors.grey
+                      : const Color(0xFFFF9800),
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
               ),
             ),
@@ -217,7 +229,8 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
     );
   }
 
-  Future<void> _handleAddToCart(BuildContext context, CartViewModel cartVM, Producto producto) async {
+  Future<void> _handleAddToCart(
+      BuildContext context, CartViewModel cartVM, Producto producto) async {
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
 
@@ -225,11 +238,16 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
       await showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: const Text('¡Ups!', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: const Text('Debes iniciar sesión para agregar productos al carrito.'),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: const Text('¡Ups!',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          content: const Text(
+              'Debes iniciar sesión para agregar productos al carrito.'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar')),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
               onPressed: () {
@@ -245,9 +263,9 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
       return;
     }
 
-    final resultado = await cartVM.agregarProductoDirecto(
-      productoId: producto.idProducto,
-      cantidad: contadorLocal,
+    final resultado = await cartVM.agregarProductoDirectoOptimizado(
+      producto: producto, // ✅ Este es el correcto
+      cantidad: 1,
     );
 
     await showDialog(
@@ -297,7 +315,8 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text('Aceptar')),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Aceptar')),
         ],
       ),
     );

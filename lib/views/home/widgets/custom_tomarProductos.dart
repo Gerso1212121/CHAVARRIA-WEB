@@ -83,7 +83,8 @@ class _ProductCardState extends State<ProductCard> {
               children: [
                 if (p.porcentajeDescuento > 0 && p.stock > 0)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.deepOrange,
                       borderRadius: BorderRadius.circular(6),
@@ -260,8 +261,11 @@ class _ProductCardState extends State<ProductCard> {
 
                 final cartVM =
                     Provider.of<CartViewModel>(context, listen: false);
-                final result = await cartVM.agregarProductoDirecto(
-                    productoId: p.idProducto);
+                final result = await cartVM.agregarProductoDirectoOptimizado(
+                  producto: p, // ✅ Este es el correcto
+                  cantidad: 1,
+                );
+
                 Navigator.of(context).pop();
 
                 String title, message;
@@ -280,7 +284,8 @@ class _ProductCardState extends State<ProductCard> {
                     break;
                   case AgregadoResultado.error:
                     title = 'Error';
-                    message = 'No se pudo agregar el producto. Intenta de nuevo.';
+                    message =
+                        'No se pudo agregar el producto. Intenta de nuevo.';
                     isSuccess = false;
                     break;
                   default:
