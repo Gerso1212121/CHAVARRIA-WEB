@@ -197,6 +197,11 @@ class UniversalTopBar extends StatefulWidget {
                                               style:
                                                   const TextStyle(fontSize: 13),
                                             ),
+                                            Text(
+                                              'Precio: ${item.precio}',
+                                              style:
+                                                  const TextStyle(fontSize: 13),
+                                            ),
                                           ],
                                         ),
                                       ),
