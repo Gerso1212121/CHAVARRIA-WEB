@@ -109,7 +109,7 @@ class _PerfilUsuarioPageState extends State<PerfilUsuarioPage> {
                 label: const Text('Ir a Iniciar Sesión'),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
                 onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/');
+                  Navigator.pushReplacementNamed(context, '/login');
                 },
               ),
             ],

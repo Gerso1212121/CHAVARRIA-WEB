@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:final_project/main.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:final_project/data/models/productos.dart';
 import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
 import 'package:final_project/views/home/widgets/custom_carrusel.dart';
 import 'package:final_project/views/home/widgets/custom_footer.dart';
@@ -17,24 +16,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with RouteAware {
-  bool _ready = false;
-  final TextEditingController _searchController =
-      TextEditingController(); // ✅ Declarado aquí
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-
-    // Limpiar búsqueda al iniciar Home
     Future.microtask(() {
       context.read<ProductViewModel>().limpiarBusqueda();
-    });
-
-    // Esperar un frame antes de mostrar contenido pesado
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() => _ready = true);
-      }
     });
   }
 
@@ -42,22 +30,30 @@ class _HomePageState extends State<HomePage> with RouteAware {
   void didChangeDependencies() {
     super.didChangeDependencies();
     routeObserver.subscribe(this, ModalRoute.of(context)!);
+
+    // Precargar imágenes del carrusel
+    for (final path in [
+      'assets/images/home1.png',
+      'assets/images/home2.png',
+      'assets/images/home3.png',
+      'assets/images/home4.png',
+    ]) {
+      precacheImage(AssetImage(path), context);
+    }
   }
 
   @override
   void dispose() {
     routeObserver.unsubscribe(this);
-    _searchController.dispose(); // ✅ Siempre libera recursos
+    _searchController.dispose();
     super.dispose();
   }
 
   @override
   void didPopNext() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        context.read<ProductViewModel>().limpiarBusqueda();
-      }
-    });
+    context
+        .read<ProductViewModel>()
+        .limpiarBusqueda(); // Lógica limpia al volver
   }
 
   @override
@@ -144,12 +140,12 @@ class _HomePageState extends State<HomePage> with RouteAware {
           ],
         ),
       ),
-      searchController: _searchController, // ✅ Aquí lo pasás al wrapper
+      searchController: _searchController,
       onSearchChanged: null,
-      child: Column(
+      child: const Column(
         children: [
-          if (_ready) const DestacadosYCategorias(),
-          if (_ready) const AppFooter(),
+          DestacadosYCategorias(),
+          AppFooter(),
         ],
       ),
     );

@@ -23,10 +23,12 @@ class ReguisterPageState extends State<ReguisterPage> {
   final _duiController = TextEditingController();
   final _direccionController = TextEditingController();
   final _telefonoController = TextEditingController();
+  final _telefono2Controller = TextEditingController(); // NUEVO
   final _correoController = TextEditingController();
   final _contrasenaController = TextEditingController();
   final _confirmarController = TextEditingController();
   bool _aceptaTerminos = false;
+  bool _isRegistrando = false;
 
   void _loginPage() {
     Navigator.push(
@@ -36,6 +38,8 @@ class ReguisterPageState extends State<ReguisterPage> {
   }
 
   void _submitForm() async {
+    if (_isRegistrando) return;
+
     if (!_aceptaTerminos) {
       showFeedbackDialog(
         context: context,
@@ -55,6 +59,10 @@ class ReguisterPageState extends State<ReguisterPage> {
 
       final registerVM = RegisterViewModel();
 
+      setState(() {
+        _isRegistrando = true;
+      });
+
       try {
         await registerVM.registrarUsuario(
           context: context,
@@ -62,6 +70,7 @@ class ReguisterPageState extends State<ReguisterPage> {
           dui: _duiController.text.trim(),
           direccion: _direccionController.text.trim(),
           telefono1: _telefonoController.text.trim(),
+          telefono2: _telefono2Controller.text.trim(),
           correo: _correoController.text.trim(),
           contrasena: _contrasenaController.text.trim(),
         );
@@ -69,8 +78,7 @@ class ReguisterPageState extends State<ReguisterPage> {
         showFeedbackDialog(
           context: context,
           title: 'Registro exitoso',
-          message:
-              'Tu cuenta fue creada correctamente. Ahora puedes iniciar sesión.',
+          message: 'Tu cuenta fue creada correctamente. Ahora puedes iniciar sesión.',
           isSuccess: true,
           actions: [
             TextButton(
@@ -89,8 +97,25 @@ class ReguisterPageState extends State<ReguisterPage> {
           message: e.toString().replaceAll('Exception: ', ''),
           isSuccess: false,
         );
+      } finally {
+        setState(() {
+          _isRegistrando = false;
+        });
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _duiController.dispose();
+    _direccionController.dispose();
+    _telefonoController.dispose();
+    _telefono2Controller.dispose();
+    _correoController.dispose();
+    _contrasenaController.dispose();
+    _confirmarController.dispose();
+    super.dispose();
   }
 
   @override
@@ -164,7 +189,8 @@ class ReguisterPageState extends State<ReguisterPage> {
                               label: 'DUI',
                               keyboardType: TextInputType.number,
                               onChanged: (value) {
-                                if (value.length == 8 && !value.contains('-')) {
+                                if (value.length == 8 &&
+                                    !value.contains('-')) {
                                   _duiController.text = '$value-';
                                   _duiController.selection =
                                       TextSelection.fromPosition(
@@ -181,6 +207,11 @@ class ReguisterPageState extends State<ReguisterPage> {
                             _buildTextField(
                               controller: _telefonoController,
                               label: 'Teléfono',
+                              keyboardType: TextInputType.phone,
+                            ),
+                            _buildTextField(
+                              controller: _telefono2Controller,
+                              label: 'Teléfono 2',
                               keyboardType: TextInputType.phone,
                             ),
                             _buildTextField(
@@ -234,9 +265,18 @@ class ReguisterPageState extends State<ReguisterPage> {
                         SizedBox(
                           width: 250,
                           child: ElevatedButton.icon(
-                            onPressed: _submitForm,
-                            icon: const Icon(Icons.login),
-                            label: const Text("Regístrate"),
+                            onPressed: _isRegistrando ? null : _submitForm,
+                            icon: _isRegistrando
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.login),
+                            label: Text(_isRegistrando ? "Registrando..." : "Regístrate"),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFEC7521),
                               foregroundColor: Colors.white,
