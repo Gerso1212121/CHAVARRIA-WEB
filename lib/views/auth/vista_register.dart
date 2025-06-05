@@ -47,12 +47,6 @@ class ReguisterPageState extends State<ReguisterPage> {
     }
 
     if (_formKey.currentState!.validate()) {
-      if (kIsWeb) {
-        final ubicacionOk =
-            await UbicacionWebService.solicitarUbicacionDesdeNavegador(context);
-        if (!ubicacionOk) return;
-      }
-
       final registerVM = RegisterViewModel();
 
       try {
@@ -260,21 +254,6 @@ class ReguisterPageState extends State<ReguisterPage> {
                               ),
                             ),
                           ],
-                        ),
-                        const Divider(),
-                        const Text("O inicia con:"),
-                        const SizedBox(height: 10),
-                        OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(FontAwesomeIcons.google, size: 18),
-                          label: const Text("Regístrate con"),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
                         ),
                       ],
                     ),
