@@ -63,8 +63,8 @@ Este acuerdo se rige por las leyes locales. Toda controversia se resolverá en t
 
 CONTACTO:
 Email: contacto@carpinteriachavarria.com
-WhatsApp: +XX XXX XXX XXXX
-Dirección: Calle Ficticia 123, Ciudad Carpintería, País.
+WhatsApp: +503 70707070
+Dirección: San Miguel Centro.
 ''',
                 textAlign: TextAlign.justify,
                 style: TextStyle(fontSize: 14, height: 1.6),
