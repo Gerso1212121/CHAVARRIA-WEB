@@ -200,11 +200,6 @@ class _PerfilUsuarioPageState extends State<PerfilUsuarioPage> {
                             _buildInfoRow(Icons.phone, 'Teléfono 1',
                                 usuario!['telefono'] ?? 'No disponible'),
                             _buildInfoRow(
-                                Icons.phone_android,
-                                'Teléfono 2',
-                                usuario!['telefono_secundario'] ??
-                                    'No registrado'),
-                            _buildInfoRow(
                                 Icons.calendar_month,
                                 'Fecha de Registro',
                                 _formatearFecha(usuario!['created_at'] ?? '')),
