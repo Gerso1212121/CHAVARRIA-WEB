@@ -30,7 +30,11 @@ class CartPage extends StatelessWidget {
               children: [
                 const SizedBox(height: 16),
                 TextButton.icon(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/',
+                    (Route<dynamic> route) => false,
+                  ),
                   icon: const Icon(Icons.arrow_back, color: Colors.orange),
                   label: const Text(
                     'Regresar',

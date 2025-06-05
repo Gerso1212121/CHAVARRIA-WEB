@@ -1,11 +1,11 @@
-import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
-import 'package:final_project/viewmodels/servicios/favoritos.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:final_project/data/models/productos.dart';
+import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
 import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
-import 'package:final_project/views/home/widgets/custom_appBar_home.dart';
+import 'package:final_project/viewmodels/servicios/favoritos.dart';
+import 'package:final_project/data/models/productos.dart';
 import 'package:final_project/views/home/widgets/custom_footer.dart';
+import 'package:final_project/views/home/widgets/custom_appBar_home.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Productos extends StatefulWidget {
@@ -16,12 +16,13 @@ class Productos extends StatefulWidget {
 }
 
 class _ProductosState extends State<Productos> {
+  final TextEditingController _searchController = TextEditingController();
+  final GlobalKey _searchKey = GlobalKey();
+
+  String? _queryInicial;
   String? categoriaSeleccionada;
   String? ordenPrecio;
   bool soloOfertas = false;
-  final TextEditingController _searchController = TextEditingController();
-  final GlobalKey _searchKey = GlobalKey();
-  String? _queryInicial;
   bool _argsAplicados = false;
 
   final List<String> categorias = [
@@ -37,15 +38,12 @@ class _ProductosState extends State<Productos> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
     if (!_argsAplicados) {
       _argsAplicados = true;
-
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           final vm = context.read<ProductViewModel>();
-
           if (args is String) {
             _queryInicial = args;
             _searchController.text = args;
@@ -72,13 +70,14 @@ class _ProductosState extends State<Productos> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 700;
 
-    List<Producto> productos = vm.productos;
+    // ✅ Aplicar filtros solo una vez al inicio del build
+    List<Producto> productos = List.from(vm.productos);
 
     if (categoriaSeleccionada != null && categoriaSeleccionada != 'Todos') {
+      final filtro = categoriaSeleccionada!.toLowerCase().trim();
       productos = productos
-          .where((p) =>
-              p.nombreCategoria?.toLowerCase().trim() ==
-              categoriaSeleccionada!.toLowerCase().trim())
+          .where(
+              (p) => (p.nombreCategoria?.toLowerCase().trim() ?? '') == filtro)
           .toList();
     }
 
@@ -103,6 +102,8 @@ class _ProductosState extends State<Productos> {
           appBarColor: const Color(0xFF333333),
           allProducts: vm.todosLosProductos,
           searchController: _searchController,
+          searchResults: vm.productos,
+          searchKey: _searchKey,
           onSearchSubmitted: (text) {
             final query = text.trim();
             if (query.isEmpty) {
@@ -119,8 +120,6 @@ class _ProductosState extends State<Productos> {
               vm.buscar(query);
             }
           },
-          searchResults: vm.productos,
-          searchKey: _searchKey,
         ),
       ),
       body: CustomScrollView(
@@ -170,8 +169,6 @@ class _ProductosState extends State<Productos> {
         alignment: WrapAlignment.start,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          // Filtros existentes...
-          // ✅ NUEVO BOTÓN PARA VOLVER A HOME
           TextButton.icon(
             onPressed: () {
               Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
@@ -217,310 +214,264 @@ class _ProductosState extends State<Productos> {
       ),
     );
   }
+}
 
-// _buildProductoCard queda igual
+Widget _buildProductoCard(BuildContext context, Producto producto) {
+  final tieneDescuento = producto.porcentajeDescuento > 0;
+  final precioOriginal = producto.precio ?? 0.0;
+  final precioConDescuento = tieneDescuento
+      ? precioOriginal * (1 - producto.porcentajeDescuento / 100)
+      : precioOriginal;
+  final isAgotado = producto.stock == 0;
 
-  Widget _buildProductoCard(BuildContext context, Producto producto) {
-    final tieneDescuento = producto.porcentajeDescuento > 0;
-    final precioOriginal = producto.precio ?? 0.0;
-    final precioConDescuento = tieneDescuento
-        ? precioOriginal * (1 - producto.porcentajeDescuento / 100)
-        : precioOriginal;
-    final isAgotado = producto.stock == 0;
+  final ValueNotifier<bool> isFavorite = ValueNotifier(false);
 
-    bool isFavorite = false;
-    bool initialized = false;
+  // 🔄 Carga inicial de favorito
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      final result = await Supabase.instance.client
+          .from('favoritos')
+          .select()
+          .eq('id_cliente', user.id)
+          .eq('id_producto', producto.idProducto)
+          .maybeSingle();
 
-    return StatefulBuilder(
-      builder: (context, setState) {
-        if (!initialized) {
-          initialized = true;
-          Future.microtask(() async {
-            final user = Supabase.instance.client.auth.currentUser;
-            if (user != null) {
-              final result = await Supabase.instance.client
-                  .from('favoritos')
-                  .select()
-                  .eq('id_cliente', user.id)
-                  .eq('id_producto', producto.idProducto)
-                  .maybeSingle();
+      isFavorite.value = result != null;
+    }
+  });
 
-              setState(() {
-                isFavorite = result != null;
-              });
-            }
-          });
-        }
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      final aspectRatio = 0.75;
+      final height = width / aspectRatio;
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth;
-            final aspectRatio = 0.75;
-            final height = width / aspectRatio;
+      return Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 6,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Fila superior
+            Padding(
+              padding:
+                  const EdgeInsets.only(left: 8, right: 8, top: 6, bottom: 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (tieneDescuento)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '-${producto.porcentajeDescuento.toInt()}% OFF',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: isFavorite,
+                    builder: (_, fav, __) {
+                      return IconButton(
+                        icon: Icon(
+                          fav ? Icons.favorite : Icons.favorite_border,
+                          color: fav ? Colors.red : Colors.grey,
+                        ),
+                        onPressed: () async {
+                          final user =
+                              Supabase.instance.client.auth.currentUser;
+                          if (user == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Debes iniciar sesión para usar favoritos'),
+                              ),
+                            );
+                            return;
+                          }
 
-            return Container(
-              height: height,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 6,
-                    offset: Offset(0, 3),
+                          final nuevoEstado = await toggleFavorito(
+                              user.id, producto.idProducto);
+                          isFavorite.value = nuevoEstado;
+                        },
+                      );
+                    },
                   ),
                 ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Fila superior
-                  Padding(
-                      padding: const EdgeInsets.only(
-                          left: 8, right: 8, top: 6, bottom: 0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          if (tieneDescuento)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.orange,
-                                borderRadius: BorderRadius.circular(8),
+            ),
+
+            // Imagen del producto
+            Expanded(
+              flex: 4,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/productoDetalle',
+                    arguments: producto,
+                  );
+                },
+                child: Hero(
+                  tag: 'producto_${producto.idProducto}',
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Image.network(
+                      producto.urlImagen ?? '',
+                      fit: BoxFit.contain,
+                      width: double.infinity,
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.broken_image, size: 60),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Información del producto
+            Expanded(
+              flex: 3,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (producto.nombreCategoria != null)
+                      Text(
+                        producto.nombreCategoria!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    const SizedBox(height: 2),
+                    Text(
+                      producto.nombre,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: isAgotado ? Colors.grey : Colors.black,
+                        decoration: isAgotado
+                            ? TextDecoration.lineThrough
+                            : TextDecoration.none,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              '\$${precioConDescuento.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color:
+                                    isAgotado ? Colors.grey : Colors.green[700],
                               ),
-                              child: Text(
-                                '-${producto.porcentajeDescuento.toInt()}% OFF',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
+                            ),
+                            if (tieneDescuento)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 6),
+                                child: Text(
+                                  '\$${precioOriginal.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                    decoration: TextDecoration.lineThrough,
+                                  ),
                                 ),
                               ),
-                            ),
-                          IconButton(
-                            icon: Icon(
-                              isFavorite
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              color: isFavorite ? Colors.red : Colors.grey,
-                            ),
-                            onPressed: () async {
-                              final user =
-                                  Supabase.instance.client.auth.currentUser;
-                              if (user == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Debes iniciar sesión para agregar a favoritos',
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
-
-                              // Esperamos el nuevo estado desde toggleFavorito
-                              final nuevoEstado = await toggleFavorito(
-                                  user.id, producto.idProducto);
-                              setState(() {
-                                isFavorite = nuevoEstado;
-                              });
-                            },
-                          ),
-                        ],
-                      )),
-
-                  // Imagen
-                  Expanded(
-                    flex: 4,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          '/productoDetalle',
-                          arguments: producto,
-                        );
-                      },
-                      child: Hero(
-                        tag: 'producto_${producto.idProducto}',
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Image.network(
-                            producto.urlImagen ?? '',
-                            fit: BoxFit.contain,
-                            width: double.infinity,
-                            errorBuilder: (_, __, ___) =>
-                                const Icon(Icons.broken_image, size: 60),
-                          ),
+                          ],
                         ),
-                      ),
+                        if (producto.tieneEnvio)
+                          const Icon(Icons.local_shipping,
+                              size: 18, color: Colors.green),
+                      ],
                     ),
-                  ),
-
-                  // Información
-                  Expanded(
-                    flex: 3,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (producto.nombreCategoria != null)
-                            Text(
-                              producto.nombreCategoria!,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          const SizedBox(height: 2),
-                          Text(
-                            producto.nombre,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              color: isAgotado ? Colors.grey : Colors.black,
-                              decoration: isAgotado
-                                  ? TextDecoration.lineThrough
-                                  : TextDecoration.none,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    '\$${precioConDescuento.toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: isAgotado
-                                          ? Colors.grey
-                                          : Colors.green[700],
-                                    ),
-                                  ),
-                                  if (tieneDescuento)
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 6),
-                                      child: Text(
-                                        '\$${precioOriginal.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.grey,
-                                          decoration:
-                                              TextDecoration.lineThrough,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              if (producto.tieneEnvio)
-                                const Icon(Icons.local_shipping,
-                                    size: 18, color: Colors.green),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Botón "Agregar"
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: isAgotado
-                            ? null
-                            : () async {
-                                final supabase = Supabase.instance.client;
-                                final user = supabase.auth.currentUser;
-
-                                if (user == null) {
-                                  showDialog(
-                                    context: context,
-                                    builder: (_) => const AlertDialog(
-                                      title: Text('¡Ups!'),
-                                      content: Text(
-                                          'Debes iniciar sesión para agregar productos al carrito.'),
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                final cartVM = Provider.of<CartViewModel>(
-                                    context,
-                                    listen: false);
-                                final resultado = await cartVM
-                                    .agregarProductoDirectoOptimizado(
-                                  producto: producto, // ✅ Este es el correcto
-                                  cantidad: 1,
-                                );
-
-                                String titulo;
-                                String mensaje;
-
-                                switch (resultado) {
-                                  case AgregadoResultado.agregadoNuevo:
-                                    titulo = '¡Agregado!';
-                                    mensaje =
-                                        '${producto.nombre} fue agregado al carrito.';
-                                    break;
-                                  case AgregadoResultado.yaExiste:
-                                    titulo = 'Ya en el carrito';
-                                    mensaje =
-                                        'Este producto ya está en tu carrito.';
-                                    break;
-                                  case AgregadoResultado.sinStock:
-                                    titulo = 'Sin stock';
-                                    mensaje =
-                                        'No hay suficiente stock disponible.';
-                                    break;
-                                  default:
-                                    titulo = 'Error';
-                                    mensaje =
-                                        'Ocurrió un error al agregar el producto.';
-                                }
-
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => AlertDialog(
-                                    title: Text(titulo),
-                                    content: Text(mensaje),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(context).pop(),
-                                        child: const Text('Aceptar'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                        icon: const Icon(Icons.add_shopping_cart),
-                        label: Text(isAgotado ? 'Agotado' : 'Agregar'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          textStyle: const TextStyle(fontSize: 13),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            );
-          },
-        );
-      },
-    );
-  }
+            ),
+
+            // Botón "Agregar al carrito"
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: isAgotado
+                      ? null
+                      : () async {
+                          final user =
+                              Supabase.instance.client.auth.currentUser;
+                          if (user == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Inicia sesión para agregar productos')),
+                            );
+                            return;
+                          }
+
+                          final cartVM = context.read<CartViewModel>();
+                          final resultado =
+                              await cartVM.agregarProductoDirectoOptimizado(
+                            producto: producto,
+                            cantidad: 1,
+                          );
+
+                          final mensaje = switch (resultado) {
+                            AgregadoResultado.agregadoNuevo =>
+                              'Producto agregado al carrito.',
+                            AgregadoResultado.yaExiste =>
+                              'Este producto ya está en el carrito.',
+                            AgregadoResultado.sinStock =>
+                              'No hay suficiente stock.',
+                            _ => 'Ocurrió un error.',
+                          };
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(mensaje)),
+                          );
+                        },
+                  icon: const Icon(Icons.add_shopping_cart),
+                  label: Text(isAgotado ? 'Agotado' : 'Agregar'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(fontSize: 13),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }

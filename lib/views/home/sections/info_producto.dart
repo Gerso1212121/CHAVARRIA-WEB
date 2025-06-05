@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:final_project/data/models/productos.dart';
-import 'package:final_project/data/models/carrito.dart';
 import 'package:final_project/viewmodels/productos/productos_viewmodel.dart';
 import 'package:final_project/viewmodels/productos/carrito_viewmodel.dart';
 import 'package:final_project/views/home/widgets/custom_footer.dart';
@@ -50,6 +49,7 @@ class ProductDetailPage extends StatelessWidget {
                             producto.urlImagen ?? '',
                             height: 400,
                             fit: BoxFit.contain,
+                            semanticLabel: producto.nombre,
                           ),
                         ),
                       ),
@@ -65,6 +65,7 @@ class ProductDetailPage extends StatelessWidget {
                           producto.urlImagen ?? '',
                           height: 250,
                           fit: BoxFit.contain,
+                          semanticLabel: producto.nombre,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -96,11 +97,7 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
   @override
   Widget build(BuildContext context) {
     final producto = widget.producto;
-    final cartVM = context.watch<CartViewModel>();
-    final double precioConDescuento =
-        (producto.porcentajeDescuento > 0 && producto.precio != null)
-            ? producto.precio! * (1 - producto.porcentajeDescuento / 100)
-            : producto.precio ?? 0.0;
+    final cartVM = context.read<CartViewModel>(); // ⚡ optimized
 
     return Card(
       elevation: 5,
@@ -118,7 +115,7 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
             Row(
               children: [
                 Text(
-                  '\$${precioConDescuento.toStringAsFixed(2)}',
+                  '\$${producto.precioFinal.toStringAsFixed(2)}',
                   style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -161,7 +158,7 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
             _buildSpecItem('Envío gratis', producto.tieneEnvio ? 'Sí' : 'No'),
             const Divider(height: 30, thickness: 1),
 
-            /// Botón protegido
+            // 🛒 BOTÓN AGREGAR AL CARRITO
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -264,61 +261,53 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
     }
 
     final resultado = await cartVM.agregarProductoDirectoOptimizado(
-      producto: producto, // ✅ Este es el correcto
+      producto: producto,
       cantidad: 1,
     );
 
-    await showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Row(
-          children: [
-            Icon(
-              resultado == AgregadoResultado.agregadoNuevo
-                  ? Icons.check_circle
-                  : resultado == AgregadoResultado.yaExiste
-                      ? Icons.info
-                      : resultado == AgregadoResultado.sinStock
-                          ? Icons.warning_amber
-                          : Icons.error,
-              color: resultado == AgregadoResultado.agregadoNuevo
-                  ? Colors.green
-                  : resultado == AgregadoResultado.yaExiste
-                      ? Colors.blueGrey
-                      : resultado == AgregadoResultado.sinStock
-                          ? Colors.orange
-                          : Colors.red,
-              size: 32,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              resultado == AgregadoResultado.agregadoNuevo
-                  ? '¡Éxito!'
-                  : resultado == AgregadoResultado.yaExiste
-                      ? 'Ya agregado'
-                      : resultado == AgregadoResultado.sinStock
-                          ? 'Sin stock'
-                          : 'Error',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+    if (!mounted) return;
+
+    if (resultado == AgregadoResultado.agregadoNuevo ||
+        resultado == AgregadoResultado.yaExiste) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            resultado == AgregadoResultado.agregadoNuevo
+                ? 'Producto agregado al carrito.'
+                : 'Este producto ya está en tu carrito.',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      await showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: const Text('Algo salió mal'),
+          content: Text(
+            resultado == AgregadoResultado.sinStock
+                ? 'No hay suficiente stock disponible.'
+                : 'Error al agregar el producto.',
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Aceptar')),
           ],
         ),
-        content: Text(
-          resultado == AgregadoResultado.agregadoNuevo
-              ? 'Producto agregado al carrito.'
-              : resultado == AgregadoResultado.yaExiste
-                  ? 'Este producto ya está en tu carrito.'
-                  : resultado == AgregadoResultado.sinStock
-                      ? 'No hay suficiente stock para agregar este producto.'
-                      : 'Ocurrió un error al agregar el producto.',
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Aceptar')),
-        ],
-      ),
-    );
+      );
+    }
+  }
+}
+
+// ✅ Extensión para calcular el precio con descuento
+extension PrecioCalculado on Producto {
+  double get precioFinal {
+    if (precio == null) return 0;
+    return porcentajeDescuento > 0
+        ? precio! * (1 - porcentajeDescuento / 100)
+        : precio!;
   }
 }
