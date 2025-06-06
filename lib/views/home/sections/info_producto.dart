@@ -237,8 +237,7 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
         builder: (_) => AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: const Text('¡Ups!',
-              style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text('🔒 Iniciar sesión'),
           content: const Text(
               'Debes iniciar sesión para agregar productos al carrito.'),
           actions: [
@@ -269,14 +268,38 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
 
     if (resultado == AgregadoResultado.agregadoNuevo ||
         resultado == AgregadoResultado.yaExiste) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+      await showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: Row(
+            children: const [
+              Icon(Icons.check_circle, color: Colors.green),
+              SizedBox(width: 8),
+              Text('Producto agregado'),
+            ],
+          ),
           content: Text(
             resultado == AgregadoResultado.agregadoNuevo
-                ? 'Producto agregado al carrito.'
+                ? 'Producto agregado correctamente al carrito.'
                 : 'Este producto ya está en tu carrito.',
           ),
-          backgroundColor: Colors.green,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Seguir comprando'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/carrito');
+              },
+              icon: const Icon(Icons.shopping_cart),
+              label: const Text('Ver carrito'),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            ),
+          ],
         ),
       );
     } else {
@@ -285,11 +308,17 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
         builder: (_) => AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: const Text('Algo salió mal'),
+          title: Row(
+            children: const [
+              Icon(Icons.error_outline, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Error'),
+            ],
+          ),
           content: Text(
             resultado == AgregadoResultado.sinStock
                 ? 'No hay suficiente stock disponible.'
-                : 'Error al agregar el producto.',
+                : 'Ocurrió un error al intentar agregar el producto.',
           ),
           actions: [
             TextButton(
@@ -302,7 +331,7 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
   }
 }
 
-// ✅ Extensión para calcular el precio con descuento
+// Extensión para calcular el precio con el descuento
 extension PrecioCalculado on Producto {
   double get precioFinal {
     if (precio == null) return 0;
