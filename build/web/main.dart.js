@@ -47275,7 +47275,7 @@ if(s)return B.al
 s=b.b
 s.toString
 r=B.c.cc(s.f)
-q=r.toLowerCase()==="Entregado"
+q=r==="Entregado"
 if(q)p=B.b_
 else p=r==="Enviado"?B.a5:B.bo
 o=A.bd(12)
