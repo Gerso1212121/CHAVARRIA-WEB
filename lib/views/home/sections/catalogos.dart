@@ -216,6 +216,9 @@ class _ProductosState extends State<Productos> {
   }
 }
 
+final ValueNotifier<bool> isLoading =
+    ValueNotifier(false); // Agrega esto justo arriba
+
 Widget _buildProductoCard(BuildContext context, Producto producto) {
   final tieneDescuento = producto.porcentajeDescuento > 0;
   final precioOriginal = producto.precio ?? 0.0;
@@ -287,31 +290,76 @@ Widget _buildProductoCard(BuildContext context, Producto producto) {
                         ),
                       ),
                     ),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: isFavorite,
-                    builder: (_, fav, __) {
-                      return IconButton(
-                        icon: Icon(
-                          fav ? Icons.favorite : Icons.favorite_border,
-                          color: fav ? Colors.red : Colors.grey,
-                        ),
-                        onPressed: () async {
-                          final user =
-                              Supabase.instance.client.auth.currentUser;
-                          if (user == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Debes iniciar sesión para usar favoritos'),
-                              ),
-                            );
-                            return;
-                          }
 
-                          final nuevoEstado = await toggleFavorito(
-                              user.id, producto.idProducto);
-                          isFavorite.value = nuevoEstado;
-                        },
+// Reemplaza el botón completo:
+                  ValueListenableBuilder<bool>(
+                    valueListenable: isLoading,
+                    builder: (context, loading, _) {
+                      return SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: isAgotado || loading
+                              ? null
+                              : () async {
+                                  final user =
+                                      Supabase.instance.client.auth.currentUser;
+                                  if (user == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Inicia sesión para agregar productos')),
+                                    );
+                                    return;
+                                  }
+
+                                  isLoading.value = true; // 🟡 Inicia carga
+                                  final cartVM = context.read<CartViewModel>();
+                                  final resultado = await cartVM
+                                      .agregarProductoDirectoOptimizado(
+                                    producto: producto,
+                                    cantidad: 1,
+                                  );
+                                  isLoading.value = false; // ✅ Fin de carga
+
+                                  final mensaje = switch (resultado) {
+                                    AgregadoResultado.agregadoNuevo =>
+                                      'Producto agregado al carrito.',
+                                    AgregadoResultado.yaExiste =>
+                                      'Este producto ya está en el carrito.',
+                                    AgregadoResultado.sinStock =>
+                                      'No hay suficiente stock.',
+                                    _ => 'Ocurrió un error.',
+                                  };
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(mensaje)),
+                                  );
+                                },
+                          icon: loading
+                              ? const SizedBox(
+                                  height: 16,
+                                  width: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                )
+                              : const Icon(Icons.add_shopping_cart),
+                          label: Text(isAgotado
+                              ? 'Agotado'
+                              : loading
+                                  ? 'Agregando...'
+                                  : 'Agregar'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: const TextStyle(fontSize: 13),
+                          ),
+                        ),
                       );
                     },
                   ),
