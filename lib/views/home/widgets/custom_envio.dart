@@ -27,7 +27,7 @@ class CardEnvio extends StatelessWidget {
         final envio = snapshot.data!;
         final colorEstado = envio.estado == 'Entregado'
             ? Colors.green
-            : envio.estado == 'En proceso'
+            : envio.estado == 'Enviado'
                 ? Colors.orange
                 : Colors.red;
 
