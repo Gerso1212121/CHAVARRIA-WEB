@@ -47160,7 +47160,7 @@ s=b.b
 s.toString
 r=s.f
 if(r==="Entregado")q=B.bn
-else q=r==="En proceso"?B.ac:B.bF
+else q=r==="Enviado"?B.ac:B.bF
 p=A.bg(12)
 o=A.aC(102,q.D()>>>16&255,q.D()>>>8&255,q.D()&255)
 n=t.p
