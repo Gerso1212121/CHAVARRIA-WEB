@@ -288,16 +288,7 @@ class _ProductDetailsCardState extends State<ProductDetailsCard> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Seguir comprando'),
-            ),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/carrito');
-              },
-              icon: const Icon(Icons.shopping_cart),
-              label: const Text('Ver carrito'),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('Cerrar'),
             ),
           ],
         ),

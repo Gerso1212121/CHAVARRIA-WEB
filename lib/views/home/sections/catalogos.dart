@@ -216,8 +216,7 @@ class _ProductosState extends State<Productos> {
   }
 }
 
-final ValueNotifier<bool> isLoading =
-    ValueNotifier(false); // Agrega esto justo arriba
+final ValueNotifier<bool> isAdding = ValueNotifier(false);
 
 Widget _buildProductoCard(BuildContext context, Producto producto) {
   final tieneDescuento = producto.porcentajeDescuento > 0;
@@ -290,83 +289,139 @@ Widget _buildProductoCard(BuildContext context, Producto producto) {
                         ),
                       ),
                     ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: isAdding,
+                      builder: (context, adding, _) {
+                        return SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: isAgotado || adding
+                                ? null
+                                : () async {
+                                    final user = Supabase
+                                        .instance.client.auth.currentUser;
 
-// Reemplaza el botón completo:
-                  ValueListenableBuilder<bool>(
-                    valueListenable: isLoading,
-                    builder: (context, loading, _) {
-                      return SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: isAgotado
-                              ? null
-                              : () async {
-                                  final user =
-                                      Supabase.instance.client.auth.currentUser;
-                                  if (user == null) {
-                                    showDialog(
+                                    if (user == null) {
+                                      await showDialog(
+                                        context: context,
+                                        builder: (_) => AlertDialog(
+                                          title:
+                                              const Text('🔐 Sesión requerida'),
+                                          content: const Text(
+                                              'Por favor, inicia sesión para agregar productos al carrito.'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context),
+                                              child: const Text('Cerrar'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    isAdding.value = true;
+
+                                    final cartVM =
+                                        context.read<CartViewModel>();
+                                    final resultado = await cartVM
+                                        .agregarProductoDirectoOptimizado(
+                                      producto: producto,
+                                      cantidad: 1,
+                                    );
+
+                                    isAdding.value = false;
+
+                                    String mensaje;
+                                    Color iconColor;
+                                    IconData icono;
+
+                                    switch (resultado) {
+                                      case AgregadoResultado.agregadoNuevo:
+                                        mensaje =
+                                            'Producto agregado correctamente al carrito.';
+                                        iconColor = Colors.green;
+                                        icono = Icons.check_circle_outline;
+                                        break;
+                                      case AgregadoResultado.yaExiste:
+                                        mensaje =
+                                            'Este producto ya está en el carrito.';
+                                        iconColor = Colors.orange;
+                                        icono = Icons.info_outline;
+                                        break;
+                                      case AgregadoResultado.sinStock:
+                                        mensaje =
+                                            '❌ No hay suficiente stock disponible.';
+                                        iconColor = Colors.red;
+                                        icono = Icons.error_outline;
+                                        break;
+                                      default:
+                                        mensaje =
+                                            '⚠️ Ocurrió un error inesperado.';
+                                        iconColor = Colors.grey;
+                                        icono = Icons.warning_amber_rounded;
+                                        break;
+                                    }
+
+                                    await showDialog(
                                       context: context,
                                       builder: (_) => AlertDialog(
-                                        title: const Text('⚠️ Atención'),
-                                        content: const Text(
-                                            'Debes iniciar sesión para agregar productos.'),
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12)),
+                                        title: Row(
+                                          children: [
+                                            Icon(icono, color: iconColor),
+                                            const SizedBox(width: 8),
+                                            const Text('Resultado'),
+                                          ],
+                                        ),
+                                        content: Text(mensaje),
                                         actions: [
                                           TextButton(
                                             onPressed: () =>
                                                 Navigator.pop(context),
-                                            child: const Text('Aceptar'),
+                                            child: const Text('Cerrar'),
                                           ),
                                         ],
                                       ),
                                     );
-                                    return;
-                                  }
-
-                                  final cartVM = context.read<CartViewModel>();
-                                  final resultado = await cartVM
-                                      .agregarProductoDirectoOptimizado(
-                                    producto: producto,
-                                    cantidad: 1,
-                                  );
-
-                                  final mensaje = switch (resultado) {
-                                    AgregadoResultado.agregadoNuevo =>
-                                      'Producto agregado exitosamente al carrito. 🎉',
-                                    AgregadoResultado.yaExiste =>
-                                      'Este producto ya se encuentra en tu carrito.',
-                                    AgregadoResultado.sinStock =>
-                                      '❌ No hay suficiente stock disponible.',
-                                    _ => '⚠️ Ha ocurrido un error inesperado.',
-                                  };
-
-                                  showDialog(
-                                    context: context,
-                                    builder: (_) => AlertDialog(
-                                      title: const Text('🛒 Resultado'),
-                                      content: Text(mensaje),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context),
-                                          child: const Text('Aceptar'),
-                                        ),
-                                      ],
+                                  },
+                            icon: adding
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
                                     ),
-                                  );
-                                },
-                          icon: const Icon(Icons.add_shopping_cart),
-                          label: Text(isAgotado ? 'Agotado' : 'Agregar'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                                  )
+                                : const Icon(Icons.add_shopping_cart),
+                            label: Text(
+                              isAgotado
+                                  ? 'Agotado'
+                                  : adding
+                                      ? 'Procesando...'
+                                      : 'Agregar',
                             ),
-                            textStyle: const TextStyle(fontSize: 13),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isAgotado || adding
+                                  ? Colors.grey
+                                  : Colors.orange,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              textStyle: const TextStyle(fontSize: 13),
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
