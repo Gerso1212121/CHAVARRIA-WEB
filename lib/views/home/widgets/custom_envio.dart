@@ -25,9 +25,12 @@ class CardEnvio extends StatelessWidget {
         }
 
         final envio = snapshot.data!;
-        final colorEstado = envio.estado == 'Entregado'
+        final estado = envio.estado.trim();
+        final isCompletado = estado.toLowerCase() == 'Entregado';
+
+        final colorEstado = isCompletado
             ? Colors.green
-            : envio.estado == 'Enviado'
+            : estado == 'Enviado'
                 ? Colors.orange
                 : Colors.red;
 
@@ -43,12 +46,23 @@ class CardEnvio extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  '🧾 Pedido: #$idPedido',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.local_shipping, color: colorEstado),
+                    Icon(
+                      isCompletado ? Icons.check_circle : Icons.local_shipping,
+                      color: colorEstado,
+                    ),
                     const SizedBox(width: 8),
                     Text(
-                      'Estado: ${envio.estado}',
+                      isCompletado ? 'Estado: Completado' : 'Estado: $estado',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: colorEstado,
